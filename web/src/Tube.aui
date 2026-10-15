@@ -1,0 +1,340 @@
+Page Tube
+  Row region=topbar
+    Row region=brand
+      Button intent=menu variant=icon title="Toggle navigation" icon=Menu
+      Button intent=home variant=brand
+        Icon name=Clapperboard
+        Text "My Tube"
+        Badge "WORKSPACE"
+    Row region=searchbar
+      Input field=search value=$app.search placeholder="Search videos, creators and ideas" title="Search videos"
+      Button intent=search variant=search title="Search" icon=Search
+    Row region=top-actions
+      Button intent=theme variant=icon title="Toggle theme" icon=SunMoon
+      Button intent=upload variant=create icon=Plus "Create"
+      Button intent=notifications variant=icon title="Notifications" icon=Bell
+      If condition=$app.signedIn
+        Button intent=settings variant=avatar title="Account and settings" $app.initials
+      Else
+        Link href=$app.loginURL variant=primary "Sign in"
+  Row region=$app.shellRegion
+    Section region=sidebar
+      For each=$app.nav
+        Button intent=navigate payload=$item.key variant=$item.variant icon=$item.icon $item.label
+      Divider
+      Text tone=eyebrow "YOUR SPACE"
+      For each=$app.libraryNav
+        Button intent=navigate payload=$item.key variant=$item.variant icon=$item.icon $item.label
+      Divider
+      Text tone=eyebrow "MAKE IT YOURS"
+      Button intent=channel variant=nav icon=CircleUserRound "Your channel"
+      Button intent=studio variant=nav icon=ChartNoAxesCombined "Creator Studio"
+      Button intent=playlists variant=nav icon=ListVideo "Playlists"
+      Button intent=settings variant=nav icon=Settings2 "Settings"
+      Spacer
+      Stack region=sidebar-footer
+        Icon name=Layers3
+        Text "One Workspace"
+        Text tone=muted "Your videos. Your community."
+        Text tone=small $app.version
+    Section region=main
+      If condition=$app.error
+        Alert tone=error $app.error
+      If condition=$app.toast
+        Row region=toast
+          Icon name=Check
+          Text $app.toast
+          Button intent=dismiss variant=icon title="Dismiss" icon=X
+      If condition=$app.loading
+        Text tone=muted "Loading your library…"
+      If condition=$app.setupScreen
+        Card region=settings-card
+          Text tone=eyebrow "WELCOME TO YOUR VIDEO WORKSPACE"
+          Heading level=1 "Make My Tube yours"
+          Text tone=body "Choose your storage, connect MyAccounts and set the server limits. Your setup link works only once and only on this computer."
+          Button intent=setup variant=primary icon=Settings2 "Set up My Tube"
+          Text tone=small "One Workspace supplies these settings automatically when managing this app."
+      If condition=$app.homeScreen
+        Row region=chips
+          For each=$app.categories
+            Button intent=category payload=$item.name variant=$item.variant $item.name
+        Row region=page-heading
+          Stack
+            Text tone=eyebrow "A LITTLE CURIOSITY GOES A LONG WAY"
+            Heading level=1 $app.heading
+            Text tone=muted $app.subheading
+          Button intent=filters variant=outline icon=SlidersHorizontal "Filters"
+        If condition=$app.showFilters
+          Row region=filter-panel
+            Select field=sort value=$app.sort options=$app.sortOptions title="Sort videos"
+            Select field=duration value=$app.duration options=$app.durationOptions title="Video duration"
+            Select field=days value=$app.days options=$app.dateOptions title="Upload date"
+        If condition=$app.hasVideos
+          Grid region=video-grid
+            For each=$app.videos
+              Card region=video-card
+                Button intent=watch payload=$item.id variant=thumbnail title=$item.title
+                  Image src=$item.poster alt=$item.title fallback=video
+                  Badge tone=duration $item.durationLabel
+                  If condition=$item.progress
+                    Metric value=$item.progress tone=progress
+                Row region=video-info
+                  Button intent=visit-channel payload=$item.channel_id variant=channel-avatar $item.initials
+                  Stack
+                    Button intent=watch payload=$item.id variant=video-title $item.title
+                    Button intent=visit-channel payload=$item.channel_id variant=channel-name $item.channel
+                    Text tone=small $item.stats
+                    Text tone=reason $item.recommendation
+                  Button intent=video-menu payload=$item.id variant=icon title="Video options" icon=EllipsisVertical
+        Else
+          Stack region=empty-state
+            Icon name=Clapperboard
+            Heading level=2 $app.emptyTitle
+            Text tone=muted $app.emptyBody
+            Button intent=upload variant=primary icon=Upload "Upload a video"
+      If condition=$app.watchScreen
+        Row region=$app.watchRegion
+          Stack region=watch-main
+            Section region=player
+              Input kind=player video=$app.video
+            Row region=player-controls
+              Button intent=cinema variant=outline icon=RectangleHorizontal "Cinema"
+              Checkbox field=autoplay checked=$app.autoplay "Autoplay next"
+              Text tone=small "Use the player for speed, captions and fullscreen"
+            Heading level=1 $app.video.title
+            Row region=watch-actions
+              Button intent=visit-channel payload=$app.video.channel_id variant=channel-avatar $app.video.initials
+              Stack
+                Button intent=visit-channel payload=$app.video.channel_id variant=video-title $app.video.channel
+                Text tone=small $app.video.stats
+              Button intent=$app.subscribeIntent payload=$app.video.id variant=$app.subscribeVariant icon=Bell $app.subscribeLabel
+              Spacer
+              Button intent=like variant=$app.likeVariant icon=ThumbsUp $app.likeLabel
+              Button intent=share variant=pill icon=Share2 "Share"
+              Button intent=save variant=pill icon=ListPlus "Save"
+              Button intent=video-menu payload=$app.video.id variant=icon title="More video actions" icon=Ellipsis
+            Card region=description
+              Text tone=strong $app.video.stats
+              Text tone=body $app.video.description
+              Row region=tags
+                Text tone=small $app.video.tags
+              For each=$app.chapters
+                Button intent=seek payload=$item.time variant=chapter $item.label
+            Row region=page-heading
+              Heading level=2 $app.commentHeading
+              Text tone=small "Keep the conversation kind."
+            If condition=$app.signedIn
+              Row region=comment-compose
+                Input field=comment value=$app.comment placeholder=$app.commentPlaceholder title="Write a comment" kind=textarea
+                Button intent=post-comment variant=primary "Post"
+            For each=$app.comments
+              Card region=$item.region
+                Row
+                  Badge tone=comment-avatar $item.initials
+                  Text tone=strong $item.name
+                  Text tone=small $item.date
+                Text tone=body $item.body
+                Row
+                  Button intent=reply payload=$item.id variant=text "Reply"
+                  If condition=$item.canEdit
+                    Button intent=edit-comment payload=$item.id variant=text "Edit"
+                  If condition=$item.canDelete
+                    Button intent=delete-comment payload=$item.id variant=text "Remove"
+          Stack region=recommendations
+            Heading level=2 "Keep exploring"
+            For each=$app.recommended
+              Card region=recommendation
+                Button intent=watch payload=$item.id variant=thumbnail
+                  Image src=$item.poster alt=$item.title fallback=video
+                  Badge tone=duration $item.durationLabel
+                Stack
+                  Button intent=watch payload=$item.id variant=video-title $item.title
+                  Text tone=small $item.channel
+                  Text tone=small $item.stats
+                  Text tone=reason $item.recommendation
+      If condition=$app.studioScreen
+        Row region=page-heading
+          Stack
+            Text tone=eyebrow "CREATOR STUDIO"
+            Heading level=1 "A space for your stories"
+            Text tone=muted "Upload, publish and see how your community is growing."
+          Button intent=upload variant=primary icon=Plus "Upload video"
+        Grid region=stats
+          Card
+            Icon name=Video
+            Text tone=muted "Videos"
+            Metric value=$app.analytics.videos
+          Card
+            Icon name=Eye
+            Text tone=muted "Views"
+            Metric value=$app.analytics.views
+          Card
+            Icon name=Clock3
+            Text tone=muted "Watch time"
+            Metric value=$app.watchTime
+          Card
+            Icon name=UsersRound
+            Text tone=muted "Subscribers"
+            Metric value=$app.analytics.subscribers
+        Text tone=small $app.analytics.measurement
+        Heading level=2 "Your content"
+        For each=$app.ownedVideos
+          Row region=studio-video
+            Image src=$item.poster alt=$item.title fallback=video
+            Stack
+              Button intent=watch payload=$item.id variant=video-title $item.title
+              Text tone=small $item.statusLabel
+              Text tone=small $item.error
+            Spacer
+            Badge $item.visibility
+            Button intent=retry payload=$item.id variant=outline icon=RefreshCw "Process"
+            Button intent=edit-video payload=$item.id variant=outline icon=Pencil "Edit"
+      If condition=$app.channelScreen
+        Section region=channel-banner
+          Image src=$app.channelBanner alt="Channel banner" fallback=banner
+        Row region=channel-heading
+          Input kind=channelAvatar src=$app.channelAvatar text=$app.channelInitials
+          Stack
+            Heading level=1 $app.channelData.name
+            Text tone=muted $app.channelDetails
+            Text tone=body $app.channelData.description
+          Spacer
+          If condition=$app.ownChannel
+            Button intent=edit-channel variant=outline icon=Pencil "Customize channel"
+        Row region=chips
+          Button intent=channel-videos variant=chip "Videos"
+          Button intent=channel-playlists variant=chip "Playlists"
+          Button intent=channel-about variant=chip "About"
+        If condition=$app.channelAbout
+          Card
+            Heading level=2 "About this channel"
+            Text tone=body $app.channelData.description
+        Else
+          Stack
+            If condition=$app.channelPlaylists
+              Stack
+                For each=$app.channelLists
+                  Button intent=open-playlist payload=$item.id variant=playlist icon=ListVideo $item.title
+            Else
+              Grid region=video-grid
+                For each=$app.channelVideos
+                  Card region=video-card
+                    Button intent=watch payload=$item.id variant=thumbnail
+                      Image src=$item.poster alt=$item.title fallback=video
+                      Badge tone=duration $item.durationLabel
+                    Button intent=watch payload=$item.id variant=video-title $item.title
+                    Text tone=small $item.stats
+      If condition=$app.playlistsScreen
+        Row region=page-heading
+          Stack
+            Text tone=eyebrow "MADE FOR ANOTHER MOMENT"
+            Heading level=1 "Your playlists"
+            Text tone=muted "Keep good videos together. Private until you decide to share."
+          Button intent=new-playlist variant=primary icon=Plus "New playlist"
+        Grid region=playlist-grid
+          For each=$app.playlists
+            Card region=playlist-card
+              Icon name=ListVideo
+              Button intent=open-playlist payload=$item.id variant=video-title $item.title
+              Text tone=small $item.subtitle
+              Button intent=edit-playlist payload=$item.id variant=text "Edit playlist"
+      If condition=$app.notificationsScreen
+        Heading level=1 "Your notifications"
+        Button intent=read-notifications variant=outline "Mark all read"
+        For each=$app.notifications
+          Button intent=watch payload=$item.video_id variant=notification icon=Bell $item.body
+        Text tone=muted "New uploads from channels you follow appear here."
+      If condition=$app.settingsScreen
+        Row region=page-heading
+          Stack
+            Text tone=eyebrow "YOUR EXPERIENCE"
+            Heading level=1 "Settings"
+            Text tone=muted "A quieter, more personal video library."
+        Card region=settings-card
+          Heading level=2 "Account & privacy"
+          Text $app.accountLabel
+          Checkbox field=personalize checked=$app.personalize "Personalise recommendations using subscriptions and watch history"
+          Button intent=clear-history variant=outline icon=History "Clear watch history"
+          Button intent=theme variant=outline icon=SunMoon "Switch light / dark theme"
+          Button intent=logout variant=outline icon=LogOut "Sign out of My Tube"
+        Card region=settings-card
+          Heading level=2 "Storage & processing"
+          Text tone=body $app.helperStatus
+          Text tone=small "FFmpeg runs as an optional separate helper process. Originals stay intact when a job fails."
+          If condition=$app.driveEnabled
+            Button intent=drive variant=outline icon=FolderOpen "Import from My Drive"
+          Link href="https://github.com/oneworkspacestudio/my-tube/releases" "Releases & updates"
+        If condition=$app.isAdmin
+          Card region=settings-card
+            Heading level=2 "Administration"
+            Text tone=muted "Manage resource limits, storage, background jobs and reports."
+            Button intent=admin variant=primary icon=ShieldCheck "Open administration"
+      If condition=$app.adminScreen
+        Row region=page-heading
+          Stack
+            Text tone=eyebrow "SERVER ADMINISTRATION"
+            Heading level=1 "Your library, under control"
+            Text tone=muted $app.adminSummary
+          Button intent=reconcile variant=outline icon=RefreshCw "Check storage"
+        Card region=settings-card
+          Heading level=2 "Configuration"
+          Text tone=muted "Settings take effect after restart. Keep client secrets in the environment."
+          Input field=adminConfig kind=textarea value=$app.adminConfig title="Server configuration JSON" rows=16
+          Button intent=save-config variant=primary "Save for next restart"
+          Text tone=small "Backup / restore: stop the server, then MyTube.exe --file backup.zip backup. Restore into a fresh --data directory."
+        Heading level=2 "Users"
+        For each=$app.adminUsers
+          Row region=studio-video
+            Text tone=strong $item.name
+            Text tone=small $item.quotaLabel
+            Spacer
+            Button intent=manage-user payload=$item.id variant=outline "Manage"
+        Heading level=2 "Background jobs"
+        For each=$app.jobs
+          Row region=studio-video
+            Text tone=small $item.video_id
+            Badge $item.status
+            Text tone=small $item.error
+        Heading level=2 "Moderation reports"
+        For each=$app.reports
+          Row region=studio-video
+            Text $item.reason
+            Badge $item.status
+            Button intent=resolve-report payload=$item.id variant=outline "Resolve"
+            Button intent=remove-reported payload=$item.id variant=outline "Remove video"
+        Heading level=2 "Audit log"
+        For each=$app.logs
+          Text tone=small $item.label
+      If condition=$app.uploadScreen
+        Row region=page-heading
+          Stack
+            Text tone=eyebrow "SHARE SOMETHING WORTH WATCHING"
+            Heading level=1 "Upload your videos"
+            Text tone=muted $app.uploadHelp
+          Button intent=studio variant=outline icon=ArrowLeft "Creator Studio"
+        Card region=dropzone
+          Icon name=CloudUpload
+          Heading level=2 "Drop your next story here"
+          Text tone=muted "MP4, MOV, MKV or WebM · originals are always preserved"
+          Input kind=files field=files multiple=true accept=".mp4,.mov,.mkv,.webm" title="Select videos"
+          Select field=uploadVisibility value=$app.uploadVisibility options=$app.visibilityOptions title="Upload visibility"
+        For each=$app.uploadTasks
+          Card region=upload-task
+            Row
+              Text tone=strong $item.name
+              Spacer
+              Badge $item.label
+            Metric tone=progress value=$item.percent
+            Text tone=small $item.error
+            Button intent=resume-upload payload=$item.id variant=outline icon=RefreshCw "Select same file to resume / retry"
+            Button intent=cancel-upload payload=$item.id variant=text "Cancel"
+        If condition=$app.driveEnabled
+          Button intent=drive variant=outline icon=FolderOpen "Or import from My Drive"
+    Row region=bottom-nav
+      Button intent=home variant=nav icon=House "Home"
+      Button intent=navigate payload=shorts variant=nav icon=Flame "Shorts"
+      Button intent=upload variant=nav icon=CirclePlus "Create"
+      Button intent=navigate payload=subscriptions variant=nav icon=TvMinimalPlay "Following"
+      Button intent=studio variant=nav icon=CircleUserRound "You"
+  If condition=$app.dialog
+    Input kind=dialog

@@ -1,0 +1,41 @@
+name: Build and test My Tube
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '26'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+      - run: npm --prefix web ci
+      - run: npm --prefix web run build
+      - run: npm --prefix web audit --audit-level=high
+      - run: go test -timeout 120s ./...
+      - run: go vet ./...
+      - run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      - run: go build -trimpath -ldflags "-s -w" -o dist/MyTube.exe ./cmd/my-tube
+        env:
+          CGO_ENABLED: '0'
+      - run: npm --prefix web test
+      - run: node scripts/test-portable.mjs
+        working-directory: web
+      - run: node scripts/licenses.mjs
+      - shell: pwsh
+        run: ./scripts/package.ps1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: my-tube-windows-amd64
+          path: dist/*

@@ -1,0 +1,18 @@
+My Tube — Copyright 2026 One Workspace contributors.
+Licensed under GNU AGPL version 3 or later; see LICENSE.
+
+OIDC/session and Windows ACL foundations were adapted from the organization’s
+Notes application (https://github.com/oneworkspacestudio/notes), also AGPL-3.0-or-later.
+No Joplin renderer, Google branding, or proprietary video assets are included.
+
+React, TanStack Query, Lucide, hls.js, Tailwind CSS, coreos/go-oidc, oauth2,
+modernc SQLite, gofrs/flock, kardianos/service and other dependencies retain
+their own licenses. A dependency-derived THIRD-PARTY-LICENSES.txt accompanies
+the binary distribution. Build-tool dependencies remain recorded in lockfiles.
+
+Optional FFmpeg and FFprobe are separate executables supplied by the operator.
+They are not redistributed in this package. FFmpeg licensing depends on its
+build configuration; see docs/MEDIA.md and https://ffmpeg.org/legal.html.
+
+The sample MP4 was generated with FFmpeg’s testsrc2 filter and contains no
+third-party recordings. Product screenshots use only disposable test data.

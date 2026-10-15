@@ -1,0 +1,10 @@
+# Secrets stay in the server environment. Do not commit real values.
+MYTUBE_OIDC_ISSUER=https://accounts.example.com
+MYTUBE_OIDC_CLIENT_ID=my-tube
+MYTUBE_OIDC_CLIENT_SECRET=replace-with-the-registered-client-secret
+# MYTUBE_DATA_DIR=C:/OneWorkspace/Data/my-tube
+# MYTUBE_MEDIA_DIR=D:/MyTubeMedia
+# MYTUBE_PUBLIC_URL=https://workspace.example.com/my-tube
+# MYTUBE_DRIVE_URL=http://127.0.0.1:8080
+# Launcher injects WORKSPACE_OIDC_ISSUER, WORKSPACE_OIDC_CLIENT_ID,
+# WORKSPACE_OIDC_CLIENT_SECRET and WORKSPACE_OIDC_REDIRECT_URI automatically.

@@ -1,0 +1,13 @@
+Page Dialog
+  Section region=modal-backdrop
+    Card region=modal
+      Row
+        Heading level=2 $app.dialogTitle
+        Spacer
+        Button intent=close-dialog variant=icon title="Close dialog" icon=X
+      If condition=$app.dialogMessage
+        Text tone=muted $app.dialogMessage
+      For each=$app.dialogFields
+        Input field=$item.key kind=$item.kind value=$item.value title=$item.label options=$item.options placeholder=$item.placeholder accept=$item.accept
+      For each=$app.dialogActions
+        Button intent=$item.intent payload=$item.payload variant=$item.variant icon=$item.icon $item.label

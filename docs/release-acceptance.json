@@ -1,0 +1,6 @@
+{
+ "version":"0.1.0-preview.1",
+ "stable_ready":false,
+ "verified":{"go_tests":15,"chrome_workflows_with_helpers":6,"native_restart_and_restore":true,"real_myaccounts_two_users":true,"real_quantum_nonadmin_import_export":true,"real_ffmpeg_hls_and_poster":true,"npm_audit_vulnerabilities":0,"go_vulnerabilities":0,"workspace_prefix":true},
+ "pending":["fresh Windows 10/11 installation","service and reboot","upgrade and rollback matrix","live Workspace add-app and browser sign-in","live shared-origin Drive cookie","public proxy and Cloudflare limits","mobile Safari/native HLS","code signing","independent security review"]
+}
