@@ -754,6 +754,13 @@ export function Tube({
                   <Heading level={1}>Your library, under control</Heading>
                   <Text tone="muted">{data.app.adminSummary}</Text>
                 </Stack>
+                <Button
+                  intent="check-updates"
+                  variant="outline"
+                  icon="Download"
+                >
+                  Check for updates
+                </Button>
                 <Button intent="reconcile" variant="outline" icon="RefreshCw">
                   Check storage
                 </Button>

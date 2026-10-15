@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  Download,
   Clapperboard,
   Menu,
   Search,
@@ -54,6 +55,7 @@ import { useUI } from "../context";
 import { Dialog } from "../Dialog.generated";
 import { apiURL, sendProgress } from "../useTube";
 const icons: any = {
+  Download,
   Clapperboard,
   Menu,
   Search,

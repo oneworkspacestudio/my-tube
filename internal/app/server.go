@@ -137,7 +137,7 @@ func (a *App) Handler() http.Handler {
 		{"GET /api/videos/{id}/comments", a.Comments, true}, {"POST /api/videos/{id}/comments", a.AddComment, false}, {"PUT /api/comments/{id}", a.EditComment, false}, {"DELETE /api/comments/{id}", a.RemoveComment, false},
 		{"GET /api/playlists", a.Playlists, true}, {"POST /api/playlists", a.SavePlaylist, false}, {"GET /api/playlists/{id}", a.Playlist, true}, {"PUT /api/playlists/{id}", a.SavePlaylist, false}, {"DELETE /api/playlists/{id}", a.DeletePlaylist, false}, {"POST /api/playlists/{id}/videos", a.PlaylistAdd, false}, {"DELETE /api/playlists/{id}/videos/{video}", a.PlaylistRemove, false},
 		{"GET /api/notifications", a.Notifications, false}, {"POST /api/notifications/read", a.ReadNotifications, false}, {"PUT /api/preferences", a.Preferences, false}, {"GET /api/studio", a.Studio, false}, {"POST /api/videos/{id}/report", a.Report, false},
-		{"GET /api/admin", a.Admin, false}, {"PUT /api/admin/config", a.AdminConfig, false}, {"PUT /api/admin/users/{id}", a.AdminUser, false}, {"POST /api/admin/reconcile", a.Reconcile, false}, {"PUT /api/admin/reports/{id}", a.ResolveReport, false},
+		{"GET /api/admin", a.Admin, false}, {"GET /api/admin/update", a.CheckUpdate, false}, {"PUT /api/admin/config", a.AdminConfig, false}, {"PUT /api/admin/users/{id}", a.AdminUser, false}, {"POST /api/admin/reconcile", a.Reconcile, false}, {"PUT /api/admin/reports/{id}", a.ResolveReport, false},
 		{"POST /api/drive/list", a.DriveList, false}, {"POST /api/drive/import", a.DriveImport, false}, {"POST /api/videos/{id}/drive-export", a.DriveExport, false},
 	}
 	for _, rt := range routes {

@@ -41,6 +41,7 @@ from GET /api/me. IDs supplied by a client never establish the current account.
 | /api/drive/list, /api/drive/import | POST {source,path,size?}; optional X-Drive-Token |
 | /api/videos/{id}/drive-export | POST {source,path}; only own originals |
 | /api/admin | GET config, users, job status, reports, storage and audit |
+| /api/admin/update | GET explicit GitHub release/version check; no automatic installation |
 | /api/admin/config | PUT full validated config; requires restart |
 | /api/admin/users/{id} | PUT {disabled,quota_mb} |
 | /api/admin/reports/{id} | PUT {status,remove} |

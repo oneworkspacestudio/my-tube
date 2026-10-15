@@ -953,6 +953,15 @@ export function useTube() {
           setToast("Configuration saved. Restart MyTube.exe to apply.");
           return;
         }
+        case "check-updates": {
+          const update = await request("admin/update");
+          setToast(
+            update.latest
+              ? `Current ${update.current} · latest published ${update.latest}${update.prerelease ? " (preview)" : ""}. Download updates from Releases in Settings.`
+              : "No published release is available yet.",
+          );
+          return;
+        }
         case "reconcile": {
           const result = await write("admin/reconcile", "POST", {
             purge_deleted: false,
@@ -1059,10 +1068,45 @@ export function useTube() {
           ];
           setDialog((old: any) => ({
             ...old,
+            actions: [
+              ...items
+                .slice(0, 200)
+                .map((item: any) =>
+                  btn(
+                    "drive-select",
+                    `${item.type === "directory" ? "Folder: " : "Video: "}${item.name}`,
+                    "outline",
+                    {
+                      path:
+                        item.path ||
+                        String(form.drivePath).replace(/\/$/, "") +
+                          "/" +
+                          item.name,
+                      size: item.size,
+                      isDir: item.type === "directory",
+                    },
+                  ),
+                ),
+              btn("drive-list", "Browse directory", "outline"),
+              btn("drive-import-confirm", "Import selected file"),
+            ],
             message: `${listing.path || form.drivePath}: ${items.map((v: any) => v.name + (v.type === "directory" ? "/" : "")).join(", ") || "Empty directory"}`,
           }));
           return;
         }
+        case "drive-select":
+          setForm((old: any) => ({
+            ...old,
+            drivePath: payload.path,
+            driveSize: String(payload.size || ""),
+          }));
+          setDialog((old: any) => ({
+            ...old,
+            message: payload.isDir
+              ? "Folder selected. Choose Browse directory to open it."
+              : "File selected. Choose Import selected file to create a private copy.",
+          }));
+          return;
         case "drive-import-confirm": {
           const result = await write(
             "drive/import",

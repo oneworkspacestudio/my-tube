@@ -38,7 +38,9 @@ Preference disables personalized signals. Lightweight analytics distinguish
 retained authenticated viewers and approximate client-reported watch aggregates.
 Replacement publishes a verified new upload under a new URL and retires the old
 record; old original remains until explicit admin purge. Social history stays on
-the previous record. Administration config applies after restart; no self-update.
+the previous record. Administration config applies after restart. Admin can
+explicitly check published GitHub release versions; binary installation is
+manual. Drive browsing offers clickable file/folder selection before import.
 
 One visibility predicate governs metadata and ALL originals/posters/HLS/segments/
 captions. No app-admin playback bypass. Public settings default off. OIDC is code
@@ -102,8 +104,9 @@ adapter uses immediate local state to bridge query-cache subscription scheduling
 
 ## Publication and open gates
 
-Version 0.1.0-preview.1. Source/release publication verification is pending at this
-handoff checkpoint; update after GitHub confirms the artifacts. SSH credentials
+Version 0.1.0-preview.1. Source is public. Initial Windows CI passed at fc97241;
+final revision/release publication is pending at this checkpoint. Update after
+GitHub confirms the artifacts. SSH credentials
 are required for workflow-bearing pushes because the HTTPS OAuth lacks workflow
 scope. No extra credential changes needed. Windows CI workflow uses immutable
 action SHAs and pinned Go/npm dependencies; optional external integration fixtures

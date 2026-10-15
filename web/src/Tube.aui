@@ -275,6 +275,7 @@ Page Tube
             Text tone=eyebrow "SERVER ADMINISTRATION"
             Heading level=1 "Your library, under control"
             Text tone=muted $app.adminSummary
+          Button intent=check-updates variant=outline icon=Download "Check for updates"
           Button intent=reconcile variant=outline icon=RefreshCw "Check storage"
         Card region=settings-card
           Heading level=2 "Configuration"

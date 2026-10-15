@@ -45,8 +45,9 @@ Redirects are rejected so credentials cannot move to another origin.
 Tokens with effective administrator permission are rejected. If your account
 is an administrator, create an appropriately limited named token for this use.
 
-Select a source name and a scoped path. Browse lists the directory’s current
-items. Import is explicit and private by default; source bytes remain untouched.
+Select a source name and a scoped path. Browse lists clickable current items;
+select a folder then browse again, or select a video and confirm Import.
+Import is explicit and private by default; source bytes remain untouched.
 Export creates a new file and refuses overwrite. Unknown content length requires
 the user to supply the file’s exact size; quotas and byte counts are checked.
 No undocumented filesystem shortcut or shared administrator token is used.
