@@ -185,7 +185,28 @@ test("create a channel, resumable native upload, direct playback and persistent 
   ).toBeVisible();
   expect((await api(context, "videos/" + videoID)).later).toBe(true);
 });
-test("optional HLS rendition decodes in Chrome",async({page,context})=>{test.skip(!process.env.MYTUBE_TEST_FFMPEG,'Set helper paths for the real HLS browser check');await expect.poll(async()=> (await api(context,'videos/'+videoID)).hls,{timeout:30000}).toBe(true);await page.goto('/#watch/'+videoID);await page.waitForFunction(()=>{const video=document.querySelector('video');return video&&video.readyState>=2});await expect(page.getByLabel('Playback quality')).toContainText('360p');await page.locator('video').evaluate((v:HTMLVideoElement)=>v.play());await page.waitForFunction(()=>document.querySelector('video')!.currentTime>.2);await page.locator('video').evaluate((v:HTMLVideoElement)=>v.pause())});
+test("optional HLS rendition decodes in Chrome", async ({ page, context }) => {
+  test.skip(
+    !process.env.MYTUBE_TEST_FFMPEG,
+    "Set helper paths for the real HLS browser check",
+  );
+  await expect
+    .poll(async () => (await api(context, "videos/" + videoID)).hls, {
+      timeout: 30000,
+    })
+    .toBe(true);
+  await page.goto("/#watch/" + videoID);
+  await page.waitForFunction(() => {
+    const video = document.querySelector("video");
+    return video && video.readyState >= 2;
+  });
+  await expect(page.getByLabel("Playback quality")).toContainText("360p");
+  await page.locator("video").evaluate((v: HTMLVideoElement) => v.play());
+  await page.waitForFunction(
+    () => document.querySelector("video")!.currentTime > 0.2,
+  );
+  await page.locator("video").evaluate((v: HTMLVideoElement) => v.pause());
+});
 
 test("playlists, indexed search and settings", async ({ page, context }) => {
   await page.getByRole("button", { name: "Playlists", exact: true }).click();
@@ -268,12 +289,14 @@ test("desktop, mobile and dark screenshots; no horizontal clipping", async ({
   await page.goto("/");
   await expect(page.locator(".video-card")).toHaveCount(1);
   await page.screenshot({
+    animations: "disabled",
     path: "../docs/screenshots/library-desktop.png",
     fullPage: true,
   });
   await page.goto("/#watch/" + videoID);
   await expect(page.locator("video")).toBeVisible();
   await page.screenshot({
+    animations: "disabled",
     path: "../docs/screenshots/watch-desktop.png",
     fullPage: true,
   });
@@ -285,11 +308,13 @@ test("desktop, mobile and dark screenshots; no horizontal clipping", async ({
     ),
   ).toBe(true);
   await page.screenshot({
+    animations: "disabled",
     path: "../docs/screenshots/watch-mobile.png",
     fullPage: true,
   });
   await page.goto("/");
   await page.screenshot({
+    animations: "disabled",
     path: "../docs/screenshots/library-mobile.png",
     fullPage: true,
   });
@@ -298,6 +323,7 @@ test("desktop, mobile and dark screenshots; no horizontal clipping", async ({
   });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({
+    animations: "disabled",
     path: "../docs/screenshots/library-dark.png",
     fullPage: true,
   });
@@ -309,4 +335,67 @@ test("desktop, mobile and dark screenshots; no horizontal clipping", async ({
   await api(context, "history", "DELETE");
 });
 
-test('first-run wizard writes a managed configuration without storing a client secret',async({browser})=>{const root=await mkdtemp(path.join(os.tmpdir(),'mytube-setup-'));const config=path.join(root,'config.json');const child=spawn(path.resolve(process.env.MYTUBE_TEST_EXE||'../dist/MyTube.exe'),['--no-browser','--config',config,'--data',path.join(root,'data'),'--port','18901'],{windowsHide:true,stdio:['ignore','pipe','pipe']});const context=await browser.newContext();try{const url=await new Promise<string>((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Setup startup timeout')),15000);child.stdout!.on('data',d=>{const m=d.toString().match(/http:\/\/127\.0\.0\.1:18901\/auth\/local\?token=[a-f0-9]+/);if(m){clearTimeout(timeout);resolve(m[0])}});child.on('error',reject)});const p=await context.newPage();await p.goto(url);await expect(p.getByRole('heading',{name:'Make My Tube yours'})).toBeVisible();await p.getByRole('button',{name:'Set up My Tube',exact:true}).click();await p.getByLabel('MyAccounts issuer URL').fill('http://localhost:12345');await p.getByLabel('MyAccounts client ID').fill('setup-fixture');await p.getByLabel('Administrator MyAccounts subject (exact sub claim)').fill('fixture-owner');await p.getByRole('button',{name:'Save setup',exact:true}).click();await expect(p.getByText('Setup saved. Restart MyTube.exe to begin using your configuration.')).toBeVisible();const saved=JSON.parse(await readFile(config,'utf8'));expect(saved.mode).toBe('managed');expect(saved.admin_subjects).toEqual(['fixture-owner']);expect(saved.oidc_client_secret).toBeUndefined()}finally{child.kill();await context.close()}});
+test("first-run wizard writes a managed configuration without storing a client secret", async ({
+  browser,
+}) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "mytube-setup-"));
+  const config = path.join(root, "config.json");
+  const child = spawn(
+    path.resolve(process.env.MYTUBE_TEST_EXE || "../dist/MyTube.exe"),
+    [
+      "--no-browser",
+      "--config",
+      config,
+      "--data",
+      path.join(root, "data"),
+      "--port",
+      "18901",
+    ],
+    { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] },
+  );
+  const context = await browser.newContext();
+  try {
+    const url = await new Promise<string>((resolve, reject) => {
+      const timeout = setTimeout(
+        () => reject(Error("Setup startup timeout")),
+        15000,
+      );
+      child.stdout!.on("data", (d) => {
+        const m = d
+          .toString()
+          .match(/http:\/\/127\.0\.0\.1:18901\/auth\/local\?token=[a-f0-9]+/);
+        if (m) {
+          clearTimeout(timeout);
+          resolve(m[0]);
+        }
+      });
+      child.on("error", reject);
+    });
+    const p = await context.newPage();
+    await p.goto(url);
+    await expect(
+      p.getByRole("heading", { name: "Make My Tube yours" }),
+    ).toBeVisible();
+    await p
+      .getByRole("button", { name: "Set up My Tube", exact: true })
+      .click();
+    await p.getByLabel("MyAccounts issuer URL").fill("http://localhost:12345");
+    await p.getByLabel("MyAccounts client ID").fill("setup-fixture");
+    await p
+      .getByLabel("Administrator MyAccounts subject (exact sub claim)")
+      .fill("fixture-owner");
+    await p.getByRole("button", { name: "Save setup", exact: true }).click();
+    await expect(
+      p.getByText(
+        "Setup saved. Restart MyTube.exe to begin using your configuration.",
+      ),
+    ).toBeVisible();
+    const saved = JSON.parse(await readFile(config, "utf8"));
+    expect(saved.mode).toBe("managed");
+    expect(saved.admin_subjects).toEqual(["fixture-owner"]);
+    expect(saved.oidc_client_secret).toBeUndefined();
+  } finally {
+    child.kill();
+    await context.close();
+  }
+});
