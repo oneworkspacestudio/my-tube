@@ -1,4 +1,9 @@
-# My Tube
+<div align="center">
+  <img src="docs/branding/my-tube.svg" alt="My Tube logo" width="112" height="112">
+  <h1>My Tube</h1>
+  <p>Your videos, channels and community.</p>
+  <p><a href="https://github.com/oneworkspacestudio/my-tube/releases"><strong>Download for Windows</strong></a> · <a href="https://github.com/oneworkspacestudio/one-workspace">One Workspace</a></p>
+</div>
 
 Your videos, channels and community, in a portable Windows application for
 [One Workspace](https://github.com/oneworkspacestudio/one-workspace).

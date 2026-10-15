@@ -141,3 +141,14 @@ mobile Safari/native HLS matrix, code signing and independent security review.
 Preview limits and exact evidence are in docs/ACCEPTANCE.md. Large libraries need
 pagination beyond 500 discovery candidates; synchronous Drive writes serialize
 with other mutations. No stable/live deployment claim is justified by fixtures.
+
+## Supplied logo and Workspace package follow-up
+
+User supplied Downloads/my-tube.svg and requested updating this README, adding
+the app to One Workspace's README and installing it with the package. The SVG
+is copied unchanged to docs/branding/my-tube.svg and a visible112px README header.
+This is a documentation/logo change; the published app binary/tag is retained.
+Workspace source at I:/Projects/one-workspace is adding the exact verified
+preview1 ZIP, licenses, supervised managed OIDC configuration and supplied launcher
+artwork. Suite builds follow its existing local-build/no-Actions instructions.
+Publication and disposable installation evidence belong in its My Tube handoff.
