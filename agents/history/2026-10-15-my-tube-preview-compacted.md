@@ -152,3 +152,12 @@ Workspace source at I:/Projects/one-workspace is adding the exact verified
 preview1 ZIP, licenses, supervised managed OIDC configuration and supplied launcher
 artwork. Suite builds follow its existing local-build/no-Actions instructions.
 Publication and disposable installation evidence belong in its My Tube handoff.
+
+Workspace follow-up completed: the public twelve-app package v0.3.0-preview.22
+includes this exact preview1 executable and licenses with managed startup, owner
+administration and shared sign-in. A fresh full installer run and real MyAccounts
+PKCE callbacks passed; public anonymous setup selected and verified the new
+package. Both public READMEs reference the supplied SVG. The Workspace release
+and its compact handoff record exact integration evidence and remaining limits.
+This app's preview1 tag and binary were not rebuilt or replaced. All disposable
+suite processes/data were cleaned up; the current live installation was retained.
