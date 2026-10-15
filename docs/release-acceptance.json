@@ -1,6 +1,11 @@
 {
  "version":"0.1.0-preview.1",
  "stable_ready":false,
+ "release":"https://github.com/oneworkspacestudio/my-tube/releases/tag/v0.1.0-preview.1",
+ "source_commit":"87895a5ab392cecdbac1167d544a035c195ef03c",
+ "hosted_windows_ci":"https://github.com/oneworkspacestudio/my-tube/actions/runs/38813374411",
+ "hosted_assets_verified":10,
+ "exe_sha256":"cdce29f4b223c6d86cdeb0b01532d6f5438c5dbe3f4899a7abdab2a79dbffa83",
  "verified":{"go_tests":15,"chrome_workflows_with_helpers":6,"native_restart_and_restore":true,"real_myaccounts_two_users":true,"real_quantum_nonadmin_import_export":true,"real_ffmpeg_hls_and_poster":true,"npm_audit_vulnerabilities":0,"go_vulnerabilities":0,"workspace_prefix":true},
  "pending":["fresh Windows 10/11 installation","service and reboot","upgrade and rollback matrix","live Workspace add-app and browser sign-in","live shared-origin Drive cookie","public proxy and Cloudflare limits","mobile Safari/native HLS","code signing","independent security review"]
 }

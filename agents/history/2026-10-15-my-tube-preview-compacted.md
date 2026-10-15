@@ -104,13 +104,35 @@ adapter uses immediate local state to bridge query-cache subscription scheduling
 
 ## Publication and open gates
 
-Version 0.1.0-preview.1. Source is public. Initial Windows CI passed at fc97241;
-final revision/release publication is pending at this checkpoint. Update after
-GitHub confirms the artifacts. SSH credentials
-are required for workflow-bearing pushes because the HTTPS OAuth lacks workflow
-scope. No extra credential changes needed. Windows CI workflow uses immutable
-action SHAs and pinned Go/npm dependencies; optional external integration fixtures
-run locally rather than downloading helper/identity/storage EXEs in CI.
+Version 0.1.0-preview.1 is published as a public prerelease with ten verified
+assets. Tag points to source `87895a5ab392cecdbac1167d544a035c195ef03c`.
+Release: https://github.com/oneworkspacestudio/my-tube/releases/tag/v0.1.0-preview.1
+Final hosted Windows CI passed:
+https://github.com/oneworkspacestudio/my-tube/actions/runs/38813374411
+Earlier CI also passed at fc97241. Final CI builds/tests/vets/scans/packages the
+executable, five browser workflows and portable restart/restore; optional real
+helper/provider fixtures run on the development host. Workflow actions use
+immutable SHAs, dependencies are pinned, and newer runs cancel superseded ones.
+
+The RELEASE executable and ZIP are downloaded from that successful final CI,
+not the local development build. Exact CI MyTube.exe is 14,213,632 bytes, SHA256
+`cdce29f4b223c6d86cdeb0b01532d6f5438c5dbe3f4899a7abdab2a79dbffa83`.
+Portable ZIP is 6,500,346 bytes, SHA256
+`3ef6f9d8e9f9d5f1ec25bff59561e4ce6f7d998365847c71d816facb248ab0b8`.
+All ten GitHub-hosted asset digests/sizes, tag target and draft=false/prerelease=true
+were checked. ZIP inner executable matches the manifest. CI files are retained
+at H:/Projects/tooling/my-tube/release-ci-87895a5; dist/ is a development build.
+
+The exact CI executable additionally passed all six local Chrome workflows with
+real HLS helpers, the disposable two-user MyAccounts fixture, the real nonadmin
+Quantum import/export fixture, and an explicit update check against the newly
+published GitHub release. Visual tests disable finite transitions before capture;
+otherwise an immediate dark-theme screenshot caught the 150-ms chip transition.
+No app theme defect was inferred from that intermediate screenshot.
+
+SSH is required for workflow-bearing pushes because HTTPS OAuth lacks workflow
+scope. No credential changes were needed. Post-publication handoff updates use
+a docs-only [skip ci] commit; they do not change the release tag or executable.
 
 Stable-ready=false. Remaining acceptance: fresh Windows10/11, service/reboot and
 upgrade/rollback, actual launcher add-app/browser OIDC at deployed origin, live

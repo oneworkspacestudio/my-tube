@@ -3,6 +3,13 @@
 The preview has a working native application. It is not designated stable until
 the remaining deployment matrix is completed.
 
+The [hosted Windows build](https://github.com/oneworkspacestudio/my-tube/actions/runs/38813374411)
+passed at source `87895a5ab392cecdbac1167d544a035c195ef03c`. Release assets come
+from that CI artifact. Its exact executable additionally passed all six Chrome
+workflows with helpers, the real MyAccounts and Quantum fixtures, and a check
+against the published release-version API. Ten hosted asset hashes/sizes and
+the release tag target were verified. The release remains a prerelease.
+
 Verified on the development Windows host:
 
 - Go store/API/auth/security/recovery tests, Go vet and govulncheck.
