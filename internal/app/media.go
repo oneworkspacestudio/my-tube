@@ -11,11 +11,13 @@ import (
 	"image/jpeg"
 	_ "image/png"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +35,9 @@ func (a *App) helper(config, name string) string {
 			return p
 		}
 		return ""
+	}
+	if p := a.downloadedHelper(name); p != "" {
+		return p
 	}
 	exe, _ := os.Executable()
 	p := filepath.Join(filepath.Dir(exe), "helpers", name+exeExt())
@@ -477,6 +482,9 @@ func (a *App) worker(ctx context.Context) {
 			return
 		case <-timer.C:
 		}
+		if a.Config.Transcode && a.Config.AutoHelpers && a.helperRetryBlocked() {
+			continue
+		}
 		var id, vid string
 		if len(a.Config.ProcessingHoursUTC) > 0 {
 			allowed := false
@@ -507,6 +515,10 @@ func (a *App) worker(ctx context.Context) {
 			if len(message) > 500 {
 				message = message[:500]
 			}
+			if errors.Is(e, errMediaToolsPending) {
+				status = "queued"
+				message = "Waiting for video tools; retrying automatically. Original remains playable."
+			}
 		}
 		if ctx.Err() != nil {
 			status = "queued"
@@ -522,6 +534,14 @@ func (a *App) process(ctx context.Context, id string) error {
 	if e != nil {
 		return e
 	}
+	if a.Config.Transcode {
+		if e = a.prepareMedia(ctx); e != nil {
+			if a.Config.AutoHelpers && a.Config.FFmpeg == "" && a.Config.FFprobe == "" {
+				return fmt.Errorf("%w: %v", errMediaToolsPending, e)
+			}
+			return e
+		}
+	}
 	ff := a.helper(a.Config.FFmpeg, "ffmpeg")
 	if ff == "" {
 		if v.Direct {
@@ -531,7 +551,7 @@ func (a *App) process(ctx context.Context, id string) error {
 	}
 	source := filepath.Join(a.Config.MediaDir, "originals", v.Original)
 	poster := filepath.Join(a.Config.MediaDir, "thumbnails", v.ID+".jpg")
-	input := []string{"-nostdin", "-v", "error", "-y", "-protocol_whitelist", "file,pipe", "-threads", strconv.Itoa(a.Config.Threads), "-i", source}
+	input := []string{"-nostdin", "-v", "error", "-y", "-protocol_whitelist", "file,pipe", "-threads", strconv.Itoa(a.Config.Threads), "-filter_threads", strconv.Itoa(a.Config.Threads), "-i", source}
 	if _, e = os.Stat(poster); os.IsNotExist(e) {
 		thumb := poster + ".tmp.jpg"
 		args := append(append([]string{}, input...), "-map", "0:v:0", "-frames:v", "1", "-vf", "scale=640:-2", "-threads", strconv.Itoa(a.Config.Threads), thumb)
@@ -562,8 +582,17 @@ func (a *App) process(ctx context.Context, id string) error {
 		}
 	}
 	if len(tiers) == 0 {
-		tiers = []int{v.Height - v.Height%2}
+		h := min(v.Height, 360)
+		tiers = []int{h - h%2}
 	}
+	sort.Ints(tiers)
+	unique := tiers[:0]
+	for _, q := range tiers {
+		if len(unique) == 0 || unique[len(unique)-1] != q {
+			unique = append(unique, q)
+		}
+	}
+	tiers = unique
 	master := "#EXTM3U\n#EXT-X-VERSION:3\n"
 	for _, q := range tiers {
 		if q < 2 {
@@ -582,11 +611,19 @@ func (a *App) process(ctx context.Context, id string) error {
 		}
 		name := fmt.Sprintf("q%d", q)
 		out := filepath.Join(tmp, name+".m3u8")
-		args := append(append([]string{}, input...), "-map", "0:v:0", "-map", "0:a:0?", "-vf", fmt.Sprintf("scale=-2:%d", q), "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p", "-threads", strconv.Itoa(a.Config.Threads), "-c:a", "aac", "-b:a", "128k", "-ac", "2", "-g", "48", "-sc_threshold", "0", "-max_muxing_queue_size", "1024", "-fs", strconv.FormatInt(budget, 10), "-f", "hls", "-hls_time", "6", "-hls_playlist_type", "vod", "-hls_flags", "independent_segments", "-hls_segment_filename", filepath.Join(tmp, name+"-%05d.ts"), out)
+		rate := rateForHeight(q)
+		args := append(append([]string{}, input...), "-map", "0:v:0", "-map", "0:a:0?", "-vf", fmt.Sprintf("scale=-2:%d,fps=30", q), "-c:v", "libx264", "-preset", "veryfast", "-b:v", fmt.Sprintf("%dk", rate.Video), "-maxrate", fmt.Sprintf("%dk", rate.Max), "-bufsize", fmt.Sprintf("%dk", rate.Buffer), "-pix_fmt", "yuv420p", "-threads", strconv.Itoa(a.Config.Threads), "-c:a", "aac", "-b:a", fmt.Sprintf("%dk", rate.Audio), "-ac", "2", "-g", "60", "-keyint_min", "60", "-sc_threshold", "0", "-max_muxing_queue_size", "1024", "-fs", strconv.FormatInt(budget, 10), "-f", "hls", "-hls_time", "4", "-hls_playlist_type", "vod", "-hls_flags", "independent_segments", "-hls_segment_filename", filepath.Join(tmp, name+"-%05d.ts"), out)
 		if e = a.run(ctx, ff, args, nil); e != nil {
 			return errors.New("Transcoding failed or exceeded resource limits; original preserved")
 		}
-		master += fmt.Sprintf("#EXT-X-STREAM-INF:BANDWIDTH=%d,RESOLUTION=%dx%d\n%s.m3u8\n", q*q*8, ((v.Width*q/v.Height)/2)*2, q, name)
+		peak, average, err := variantBandwidth(out)
+		if err != nil {
+			return err
+		}
+		master += fmt.Sprintf("#EXT-X-STREAM-INF:BANDWIDTH=%d,AVERAGE-BANDWIDTH=%d,RESOLUTION=%dx%d,FRAME-RATE=30.000\n%s.m3u8\n", peak, average, int(math.Round(float64(v.Width)*float64(q)/float64(v.Height)/2))*2, q, name)
+	}
+	if e = atomicWrite(filepath.Join(tmp, "profile.txt"), []byte(streamingProfile)); e != nil {
+		return e
 	}
 	if e = atomicWrite(filepath.Join(tmp, "master.m3u8"), []byte(master)); e != nil {
 		return e

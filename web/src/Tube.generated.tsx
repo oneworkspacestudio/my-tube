@@ -296,6 +296,7 @@ export function Tube({
                 <Section region="player">
                   <Input kind="player" video={data.app.video} />
                 </Section>
+                <Text tone="small">{data.app.playbackStatus}</Text>
                 <Row region="player-controls">
                   <Button
                     intent="cinema"
@@ -718,10 +719,12 @@ export function Tube({
               </Card>
               <Card region="settings-card">
                 <Heading level={2}>Storage & processing</Heading>
+                <Text tone="body">{data.app.streamingStatus}</Text>
                 <Text tone="body">{data.app.helperStatus}</Text>
                 <Text tone="small">
-                  FFmpeg runs as an optional separate helper process. Originals
-                  stay intact when a job fails.
+                  Verified video tools prepare automatically on Windows. Smaller
+                  qualities are generated in the background; originals stay
+                  intact.
                 </Text>
                 {data.app.driveEnabled && (
                   <Button intent="drive" variant="outline" icon="FolderOpen">

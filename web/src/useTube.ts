@@ -129,7 +129,7 @@ export function useTube() {
       localStorage.getItem("mytube-theme") || "light";
   }, []);
   const [screen, id] = route.split("/");
-  const meQ = useQuery({ queryKey: ["me"], queryFn: () => request("me") });
+  const meQ = useQuery({ queryKey: ["me"], queryFn: () => request("me"), refetchInterval: 5000 });
   const me = meQ.data || {};
   const signedIn = !!me.user?.id;
   const csrf = me.csrf || "";
@@ -1376,6 +1376,8 @@ export function useTube() {
         ? `${me.user.name} · ${me.mode === "local" ? "Local owner" : "MyAccounts"}`
         : "Signed out",
       personalize: me.personalize,
+      streamingStatus: me.streaming?.message ? me.streaming.message+(me.streaming.total&&me.streaming.phase==="downloading"?` ${Math.min(100,Math.floor(100*me.streaming.downloaded/me.streaming.total))}% (${(me.streaming.downloaded/1048576).toFixed(1)} / ${(me.streaming.total/1048576).toFixed(1)} MiB)`:"") : "Preparing adaptive video quality…",
+      playbackStatus: watchQ.data?.hls ? "Adaptive quality is ready. Auto adjusts playback to your connection." : watchQ.data?.status==="failed" ? "Video optimisation needs attention. The original remains playable; retry processing in Creator Studio." : me.streaming?.phase==="error" ? me.streaming.message : me.transcode ? "Preparing smaller video qualities. The original remains playable and may need more bandwidth until processing finishes." : "Playing the original file. Automatic video optimisation is disabled.",
       helperStatus: `FFprobe: ${me.ffprobe ? "available" : "not configured"} · FFmpeg: ${me.ffmpeg ? "available" : "not configured"}`,
       driveEnabled: me.drive,
       isAdmin: me.user?.admin,

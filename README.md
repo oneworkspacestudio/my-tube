@@ -143,3 +143,14 @@ show a disposable test library, not supplied user content.
 See [acceptance evidence](docs/ACCEPTANCE.md) for tested behavior and remaining
 gates. Source is **AGPL-3.0-or-later**. Third-party notices ship with releases.
 No Google or YouTube logos or proprietary media assets are included.
+
+## Smoother streaming — preview.2
+
+Windows prepares verified video tools automatically and generates bounded
+360p/480p/720p/1080p streaming copies. Existing originals are queued after upgrade.
+Auto starts small and adapts to bandwidth. Playback position is preserved when
+prepared streams become available. Originals are never replaced. Settings shows
+the one-time tool download; Creator Studio shows background jobs. Tools download
+directly from pinned upstream (about115MB); My Tube does not bundle FFmpeg.
+Internet access and roughly350MB temporary free space are needed the first time.
+Explicit opt-outs remain supported. [Details](docs/MEDIA.md).

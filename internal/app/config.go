@@ -7,11 +7,12 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 )
 
-const Version = "0.1.0-preview.1"
+const Version = "0.1.0-preview.2"
 
 type Config struct {
 	Listen             string   `json:"listen"`
@@ -37,6 +38,7 @@ type Config struct {
 	AllowedFormats     []string `json:"allowed_formats"`
 	ProcessingHoursUTC []int    `json:"processing_hours_utc"`
 	Transcode          bool     `json:"transcode"`
+	AutoHelpers        bool     `json:"auto_helpers"`
 	FFmpeg             string   `json:"ffmpeg"`
 	FFprobe            string   `json:"ffprobe"`
 	ScanProgram        string   `json:"scan_program"`
@@ -50,6 +52,8 @@ type Config struct {
 
 func LoadConfig(p string) (Config, error) {
 	c := Config{Listen: "127.0.0.1:8796", PublicURL: "http://127.0.0.1:8796", DataDir: "data", Mode: "managed", SessionHours: 8, UploadMB: 2048, QuotaMB: 10240, StorageMB: 102400, Workers: 1, Threads: 2, JobMinutes: 120, Qualities: []int{360, 480, 720, 1080}, AllowedFormats: []string{".mp4", ".mov", ".mkv", ".webm"}, RetentionDays: 90}
+	c.Transcode = true
+	c.AutoHelpers = runtime.GOOS == "windows" && runtime.GOARCH == "amd64"
 	b, e := os.ReadFile(p)
 	if e == nil {
 		if e = json.Unmarshal(b, &c); e != nil {
@@ -167,7 +171,7 @@ func CheckDataDirectory(dir string) error {
 		return e
 	}
 	_, db := os.Stat(filepath.Join(abs, "mytube.db"))
-	allowed := map[string]bool{"mytube.db": true, "mytube.db-wal": true, "mytube.db-shm": true, "mytube.lock": true, "uploads": true, "backups": true, "media": true, "logs": true}
+	allowed := map[string]bool{"mytube.db": true, "mytube.db-wal": true, "mytube.db-shm": true, "mytube.lock": true, "uploads": true, "backups": true, "media": true, "logs": true, "helpers": true}
 	for _, ent := range entries {
 		if !allowed[ent.Name()] || os.IsNotExist(db) && ent.Name() != "mytube.lock" {
 			return errors.New("data directory contains unrelated files")

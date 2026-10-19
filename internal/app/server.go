@@ -28,6 +28,7 @@ type App struct {
 	rates                    map[string]rate
 	cancel                   context.CancelFunc
 	workers                  sync.WaitGroup
+	helpers                  mediaHelpers
 }
 type rate struct {
 	count int
@@ -61,6 +62,18 @@ func New(c Config, assets fs.FS, logger *log.Logger) (*App, error) {
 func (a *App) StartWorkers() {
 	ctx, cancel := context.WithCancel(context.Background())
 	a.cancel = cancel
+	if a.Config.Transcode {
+		a.queueUnoptimised()
+		if a.Config.AutoHelpers {
+			a.workers.Add(1)
+			go func() {
+				defer a.workers.Done()
+				if e := a.prepareMedia(ctx); e != nil {
+					a.Logger.Print("Adaptive video tools are not ready; originals remain available")
+				}
+			}()
+		}
+	}
 	for i := 0; i < a.Config.Workers; i++ {
 		a.workers.Add(1)
 		go func() { defer a.workers.Done(); a.worker(ctx) }()
@@ -238,7 +251,7 @@ func (a *App) Me(w http.ResponseWriter, r *http.Request) {
 		a.Store.DB.QueryRow("SELECT id FROM channels WHERE owner=?", id.User.ID).Scan(&channel)
 		a.Store.DB.QueryRow("SELECT personalize FROM users WHERE id=?", id.User.ID).Scan(&personalize)
 	}
-	respond(w, 200, map[string]any{"user": id.User, "csrf": id.CSRF, "channel_id": channel, "personalize": personalize, "version": Version, "mode": a.Config.Mode, "setup": a.Config.Setup, "upload_mb": a.Config.UploadMB, "public_uploads": a.Config.PublicUploads, "drive": a.Config.DriveURL != "", "ffmpeg": a.helper(a.Config.FFmpeg, "ffmpeg") != "", "ffprobe": a.helper(a.Config.FFprobe, "ffprobe") != ""})
+	respond(w, 200, map[string]any{"user": id.User, "csrf": id.CSRF, "channel_id": channel, "personalize": personalize, "version": Version, "mode": a.Config.Mode, "setup": a.Config.Setup, "upload_mb": a.Config.UploadMB, "public_uploads": a.Config.PublicUploads, "drive": a.Config.DriveURL != "", "ffmpeg": a.helper(a.Config.FFmpeg, "ffmpeg") != "", "ffprobe": a.helper(a.Config.FFprobe, "ffprobe") != "", "transcode": a.Config.Transcode, "streaming": a.helperProgress()})
 }
 func (a *App) Logout(w http.ResponseWriter, r *http.Request) {
 	a.Store.DB.Exec("DELETE FROM sessions WHERE hash=?", who(r).Hash)

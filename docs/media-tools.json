@@ -1,0 +1,23 @@
+{
+  "url": "https://github.com/GyanD/codexffmpeg/releases/download/9.0.2/ffmpeg-9.0.2-essentials_build.zip",
+  "version": "9.0.2",
+  "archiveSHA256": "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba",
+  "archiveBytes": 114768076,
+  "members": {
+    "ffmpeg.exe": {
+      "member": "ffmpeg-9.0.2-essentials_build/bin/ffmpeg.exe",
+      "sha256": "3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec",
+      "size": 105423872
+    },
+    "ffprobe.exe": {
+      "member": "ffmpeg-9.0.2-essentials_build/bin/ffprobe.exe",
+      "sha256": "f0d36ecbbdd3bcfac3efa078c96c7271c2e68b3810595552ac3b7f17e9a65c52",
+      "size": 105221120
+    }
+  },
+  "publisher": "GyanD/codexffmpeg",
+  "release": "https://github.com/GyanD/codexffmpeg/releases/tag/9.0.2",
+  "supplierDocumentation": "https://www.gyan.dev/ffmpeg/builds/",
+  "officialDownloadPage": "https://ffmpeg.org/download.html",
+  "distribution": "Not bundled; fetched directly from upstream at runtime, pinned by archive and executable SHA256."
+}

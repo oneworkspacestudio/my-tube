@@ -17,7 +17,8 @@ Invalid configuration fails before serving requests.
 | allowed_formats | .mp4, .mov, .mkv, .webm; actual content is verified |
 | public_uploads / public_access | both false; separate publish/anonymous controls |
 | workers / threads / job_minutes | 1 / 2 / 120; max 4 workers and 8 threads |
-| transcode / qualities | false; [360,480,720,1080], never above source height |
+| transcode / qualities | true; [360,480,720,1080], bounded rates and no upscaling; explicit false is respected |
+| auto_helpers | true on Windows x64; one-time verified115MB upstream download into private data/helpers; false disables downloads |
 | processing_hours_utc | [] for all hours; e.g. [0,1,2,3,4] for overnight processing |
 | ffmpeg / ffprobe | explicit executable paths or adjacent helpers/ executables |
 | scan_program | optional executable receiving the staged file as its sole argument; nonzero/timeout rejects publication |

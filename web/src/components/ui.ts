@@ -374,6 +374,7 @@ function Player({ video: v }: any) {
   const ui = useUI();
   const ref = useRef<HTMLVideoElement>(null);
   const hls = useRef<Hls | null>(null);
+  const resume = useRef({id:"",time:0,playing:false});
   const [levels, setLevels] = useState<any[]>([]);
   const [quality, setQuality] = useState("-1");
   const [speed, setSpeed] = useState("1");
@@ -390,7 +391,7 @@ function Player({ video: v }: any) {
     last.current = 0;
     let engine: Hls | null = null;
     if (v.hls && Hls.isSupported()) {
-      engine = new Hls({ maxBufferLength: 30 });
+      engine = new Hls({ maxBufferLength: 30, maxMaxBufferLength: 60, maxBufferSize: 30*1024*1024, startLevel: 0, capLevelToPlayerSize: true, abrEwmaDefaultEstimate: 800000, abrBandWidthFactor: 0.75, abrBandWidthUpFactor: 0.6 });
       hls.current = engine;
       engine.loadSource(apiURL(`videos/${v.id}/media/master.m3u8`));
       engine.attachMedia(el);
@@ -411,13 +412,15 @@ function Player({ video: v }: any) {
           "This video is waiting for a compatible streaming rendition.",
       );
     }
+    const restore=resume.current.id===v.id?resume.current:{id:v.id,time:v.position||0,playing:false};
     const loaded = () => {
-      if (v.position > 0 && v.position < el.duration - 3)
-        el.currentTime = v.position;
+      if (restore.time > 0 && restore.time < el.duration - 1) el.currentTime = restore.time;
       el.playbackRate = Number(speed);
+      if(restore.playing)void el.play().catch(()=>{});
     };
     el.addEventListener("loadedmetadata", loaded);
     return () => {
+      resume.current={id:v.id,time:el.currentTime||0,playing:!el.paused&&!el.ended};
       el.pause();
       engine?.destroy();
       hls.current = null;
