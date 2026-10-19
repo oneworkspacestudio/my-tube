@@ -52,3 +52,25 @@ Protected disposable state only C:/Projects/.cache/workspace-tube-streaming-2026
 Track/stop every fixture, check process/path/reparse boundaries and remove that
 exact C root after gates. Owner C:/tmp/workspace/{Apps,Private,Files} must stay
 untouched. Source/artifacts stay on I:. Append actual publication/cleanup receipts.
+
+## Component publication and final native gates
+
+Published v0.1.0-preview.2 from da3dc1d8f59d9932c09cac71b3528c484c9cdf6f.
+All ten remote asset sizes/SHA256 matched; the public ZIP was downloaded/hashed
+(bf788ebef31d770224eb7d548d7c771e177c537707330ebcf0ef8d4521c6a5ac).
+The final packaged EXE separately passed original-byte preservation, cache reuse
+and simulated1.2Mbps playback. Actions remain disabled and were not used.
+
+Workspace41 source17a37ac builds an exact19-app bundle whose My Tube packages
+match this published component. Native isolated baseline40 with Accounts/Drive/
+MyTube1 was seeded with a synthetic original, then the released40 updater applied
+Tube2 and the41 installer updated the manager. IDs/bytes/identity/paths survived;
+actual managed SSO and360p playback at simulated1.2Mbps passed after updating.
+Task-owned processes/browsers stopped; named C fixture removed (~1.62GB), with
+source/evidence on I:. Owner install/data/tunnel untouched and local health200.
+Workspace41 is published from17a37ac1f98c514593805e390b9b44b5df5435cc, with24
+verified remote size/SHA256 assets, downloaded/hashed public catalog and anonymous
+installer/bundle availability. Tag source matches build provenance. Both org
+main branches contain implementation; no Actions used. Publication complete;
+owner must update Workspace/MyTube and leave it running while originals prepare.
+Do not retag or replace immutable published assets.
