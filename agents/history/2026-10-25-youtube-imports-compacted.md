@@ -175,3 +175,10 @@ No C fixture and no live owner library used as disposable test data. Source3
 release stays immutable. Next: publish4, promote Workspace pin/channel, install
 Tube only on secondary and retry the existing requested source. Preserve90,
 MyAI7/other versions, operation locks and newest protected rollback.
+
+Preview4 publication complete: source948db4a, tagv0.1.0-preview.4; all13 asset
+sizes/digests verified. Anonymous public Windows ZIP hash/size match; public raw
+channel promotionad5dea0 and future suite pin pushed. Prior tags/withholding
+preserved. Secondary Tube-only normal update is next; no manager91/full installer
+replacement. Raw diagnostic signed-URL metadata and partial media removed from
+this task folder on I; no C scratch created.
