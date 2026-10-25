@@ -188,3 +188,14 @@ check offered only Tube3->4. Download/package checks passed; current public UI
 shows stage4 compatibility/restart checking then connection loss. Do not repeat
 apply or recover while its normal protected operation runs. Public source/release
 and channel are delivered; installation and existing-source retry pending.
+
+## Preview5 quality correction while4 installs
+
+A focused format listing showed the source video offers480p only as AV1 MP4;
+H264 is360p/720p. Preview4 correctly caps480 but falls back360 with that codec
+filter. Preview5 prefers H264 at480, otherwise keeps the best MP4 up to480 when
+normal processing is enabled (including AV1), with normal H264/AAC HLS generation.
+When processing is explicitly disabled it retains compatible H264 selection.
+Do not replace published4 assets or alter its active installation transaction.
+Prepare/publish/promote5 separately; finish4 first, then normal5 update if needed.
+No source/helper pins, media ACLs or other app contracts changed.

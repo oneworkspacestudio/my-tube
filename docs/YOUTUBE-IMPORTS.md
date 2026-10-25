@@ -50,8 +50,11 @@ is counted as saved only after verification and publication. Completed/cancelled
 items do not keep an active progress bar. Each failed video has a result and
 other available videos in the batch can continue.
 
-Imports default to H.264/AAC MP4 at up to **480p**, falling back to lower available
-resolutions. This applies to existing sources when they next download, too.
+Imports default to MP4 at up to **480p**, falling back to lower available
+resolutions. With media tools and processing enabled, 480p H.264 is preferred; 480p AV1 MP4
+is kept when H.264 is only available at a lower resolution. Normal processing
+prepares H.264/AAC streaming playback for that original. This applies to existing
+sources when they next download, too.
 With FFmpeg/FFprobe available, separate
 audio/video streams are muxed directly into a bounded fragmented MP4 stream;
 there are no full separate/merged staging copies. Without these helpers, the

@@ -751,7 +751,14 @@ func (a *App) downloadYouTube(parent context.Context, tool, deno string, s youtu
 	}
 	adaptive := ffmpeg != "" && a.helper(a.Config.FFprobe, "ffprobe") != ""
 	if adaptive {
-		format = "bestvideo[ext=mp4][vcodec^=avc1][height<=480][protocol=https]+bestaudio[ext=m4a][protocol=https]/" + format
+		// Prefer H.264 when it has the target resolution, but do not discard a
+		// genuine 480p AV1 MP4 in favour of 360p. Normal media processing prepares
+		// H.264/AAC playback for originals that cannot play directly in browsers.
+		if a.Config.Transcode {
+			format = "bestvideo[ext=mp4][vcodec^=avc1][height=480][protocol=https]+bestaudio[ext=m4a][protocol=https]/bestvideo[ext=mp4][height<=480][protocol=https]+bestaudio[ext=m4a][protocol=https]/" + format
+		} else {
+			format = "bestvideo[ext=mp4][vcodec^=avc1][height<=480][protocol=https]+bestaudio[ext=m4a][protocol=https]/" + format
+		}
 	}
 	if adaptive {
 		args = append(args, "--ffmpeg-location", ffmpeg)
