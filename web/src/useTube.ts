@@ -107,6 +107,7 @@ export function useTube() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [adminConfig, setAdminConfig] = useState("");
   const [channelTab, setChannelTab] = useState("videos");
+  const [importBusy, setImportBusy] = useState(false);
   const files = useRef(new Map<string, File>());
   const active = useRef(new Set<string>());
   const go = (to: string) => {
@@ -129,7 +130,11 @@ export function useTube() {
       localStorage.getItem("mytube-theme") || "light";
   }, []);
   const [screen, id] = route.split("/");
-  const meQ = useQuery({ queryKey: ["me"], queryFn: () => request("me"), refetchInterval: 5000 });
+  const meQ = useQuery({
+    queryKey: ["me"],
+    queryFn: () => request("me"),
+    refetchInterval: 5000,
+  });
   const me = meQ.data || {};
   const signedIn = !!me.user?.id;
   const csrf = me.csrf || "";
@@ -201,6 +206,12 @@ export function useTube() {
     queryKey: ["uploads", uid],
     queryFn: () => request("uploads"),
     enabled: screen === "upload" && signedIn,
+  });
+  const importsQ = useQuery<any[]>({
+    queryKey: ["youtube", uid],
+    queryFn: () => request("youtube"),
+    enabled: screen === "imports" && signedIn,
+    refetchInterval: screen === "imports" ? 1500 : false,
   });
   useEffect(() => {
     if (adminQ.data && !adminConfig)
@@ -391,6 +402,148 @@ export function useTube() {
     try {
       setError("");
       switch (name) {
+        case "imports":
+          need();
+          go("imports");
+          return;
+        case "youtube-add":
+          need();
+          show(
+            "youtube",
+            "Import a YouTube channel or playlist",
+            [
+              f("youtubeURL", "Channel URL, @handle or playlist URL"),
+              f(
+                "youtubeLatest",
+                "Number of recent videos (1–50)",
+                10,
+                "number",
+              ),
+              f(
+                "youtubeOrder",
+                "Playlist window (channels always use newest uploads)",
+                "last",
+                "select",
+                [
+                  {
+                    value: "last",
+                    label: "End of playlist — typically newest additions",
+                  },
+                  {
+                    value: "first",
+                    label: "Start of playlist — for newest-first playlists",
+                  },
+                ],
+              ),
+              f("youtubeAuto", "Check for new videos", "manual", "select", [
+                "manual",
+                "daily",
+              ]),
+            ],
+            [btn("youtube-save", "Add and download", "primary")],
+            "Videos and the matching playlist are private. Choose the end for playlists where new videos are added at the bottom. Daily checks run while My Tube is running.",
+          );
+          return;
+        case "youtube-save":
+          if (importBusy) return;
+          setImportBusy(true);
+          try {
+            await write("youtube", "POST", {
+              url: form.youtubeURL,
+              latest: Number(form.youtubeLatest),
+              playlist_order: form.youtubeOrder,
+              auto_hours: form.youtubeAuto === "daily" ? 24 : 0,
+            });
+            setDialog(null);
+            go("imports");
+            setToast(
+              "Source added. Videos download in the background; you can leave this page.",
+            );
+            await refresh();
+          } finally {
+            setImportBusy(false);
+          }
+          return;
+        case "youtube-sync":
+        case "youtube-cancel":
+        case "youtube-remove":
+          if (importBusy) return;
+          setImportBusy(true);
+          try {
+            await write(
+              `youtube/${payload}${name === "youtube-remove" ? "" : name === "youtube-sync" ? "/sync" : "/cancel"}`,
+              name === "youtube-remove" ? "DELETE" : "POST",
+              {},
+            );
+            setToast(
+              name === "youtube-remove"
+                ? "Source removed. Downloaded videos and playlist are kept."
+                : name === "youtube-cancel"
+                  ? "Cancelling import. Saved videos are kept."
+                  : "Checking for new videos in the background.",
+            );
+            await refresh();
+          } finally {
+            setImportBusy(false);
+          }
+          return;
+        case "youtube-settings": {
+          const source = importsQ.data?.find((s: any) => s.id === payload);
+          if (!source) return;
+          show(
+            "youtube-settings",
+            "Import settings",
+            [
+              f(
+                "youtubeLatest",
+                "Number of recent videos (1–50)",
+                source.latest,
+                "number",
+              ),
+              f(
+                "youtubeOrder",
+                "Playlist window (channels always use newest uploads)",
+                source.playlist_order,
+                "select",
+                [
+                  {
+                    value: "last",
+                    label: "End of playlist — typically newest additions",
+                  },
+                  {
+                    value: "first",
+                    label: "Start of playlist — for newest-first playlists",
+                  },
+                ],
+              ),
+              f(
+                "youtubeAuto",
+                "Check for new videos",
+                source.auto_hours ? "daily" : "manual",
+                "select",
+                ["manual", "daily"],
+              ),
+            ],
+            [btn("youtube-settings-save", "Save settings", "primary", payload)],
+            "Changing this does not remove existing videos. Choose Check for new videos to run immediately.",
+          );
+          return;
+        }
+        case "youtube-settings-save":
+          if (importBusy) return;
+          setImportBusy(true);
+          try {
+            await write(`youtube/${payload}`, "PUT", {
+              latest: Number(form.youtubeLatest),
+              playlist_order: form.youtubeOrder,
+              auto_hours: form.youtubeAuto === "daily" ? 24 : 0,
+            });
+            setDialog(null);
+            await refresh();
+          } finally {
+            setImportBusy(false);
+          }
+          return;
         case "menu":
           setMenu((x) => !x);
           return;
@@ -1069,24 +1222,22 @@ export function useTube() {
           setDialog((old: any) => ({
             ...old,
             actions: [
-              ...items
-                .slice(0, 200)
-                .map((item: any) =>
-                  btn(
-                    "drive-select",
-                    `${item.type === "directory" ? "Folder: " : "Video: "}${item.name}`,
-                    "outline",
-                    {
-                      path:
-                        item.path ||
-                        String(form.drivePath).replace(/\/$/, "") +
-                          "/" +
-                          item.name,
-                      size: item.size,
-                      isDir: item.type === "directory",
-                    },
-                  ),
+              ...items.slice(0, 200).map((item: any) =>
+                btn(
+                  "drive-select",
+                  `${item.type === "directory" ? "Folder: " : "Video: "}${item.name}`,
+                  "outline",
+                  {
+                    path:
+                      item.path ||
+                      String(form.drivePath).replace(/\/$/, "") +
+                        "/" +
+                        item.name,
+                    size: item.size,
+                    isDir: item.type === "directory",
+                  },
                 ),
+              ),
               btn("drive-list", "Browse directory", "outline"),
               btn("drive-import-confirm", "Import selected file"),
             ],
@@ -1227,6 +1378,7 @@ export function useTube() {
     screen === "watch" ? watchQ : null,
     screen === "channel" ? channelQ : null,
     screen === "admin" ? adminQ : null,
+    screen === "imports" ? importsQ : null,
   ];
   const queryError = queries.find((q) => q?.error)?.error as Error | undefined;
   return {
@@ -1376,8 +1528,21 @@ export function useTube() {
         ? `${me.user.name} · ${me.mode === "local" ? "Local owner" : "MyAccounts"}`
         : "Signed out",
       personalize: me.personalize,
-      streamingStatus: me.streaming?.message ? me.streaming.message+(me.streaming.total&&me.streaming.phase==="downloading"?` ${Math.min(100,Math.floor(100*me.streaming.downloaded/me.streaming.total))}% (${(me.streaming.downloaded/1048576).toFixed(1)} / ${(me.streaming.total/1048576).toFixed(1)} MiB)`:"") : "Preparing adaptive video quality…",
-      playbackStatus: watchQ.data?.hls ? "Adaptive quality is ready. Auto adjusts playback to your connection." : watchQ.data?.status==="failed" ? "Video optimisation needs attention. The original remains playable; retry processing in Creator Studio." : me.streaming?.phase==="error" ? me.streaming.message : me.transcode ? "Preparing smaller video qualities. The original remains playable and may need more bandwidth until processing finishes." : "Playing the original file. Automatic video optimisation is disabled.",
+      streamingStatus: me.streaming?.message
+        ? me.streaming.message +
+          (me.streaming.total && me.streaming.phase === "downloading"
+            ? ` ${Math.min(100, Math.floor((100 * me.streaming.downloaded) / me.streaming.total))}% (${(me.streaming.downloaded / 1048576).toFixed(1)} / ${(me.streaming.total / 1048576).toFixed(1)} MiB)`
+            : "")
+        : "Preparing adaptive video quality…",
+      playbackStatus: watchQ.data?.hls
+        ? "Adaptive quality is ready. Auto adjusts playback to your connection."
+        : watchQ.data?.status === "failed"
+          ? "Video optimisation needs attention. The original remains playable; retry processing in Creator Studio."
+          : me.streaming?.phase === "error"
+            ? me.streaming.message
+            : me.transcode
+              ? "Preparing smaller video qualities. The original remains playable and may need more bandwidth until processing finishes."
+              : "Playing the original file. Automatic video optimisation is disabled.",
       helperStatus: `FFprobe: ${me.ffprobe ? "available" : "not configured"} · FFmpeg: ${me.ffmpeg ? "available" : "not configured"}`,
       driveEnabled: me.drive,
       isAdmin: me.user?.admin,
@@ -1395,6 +1560,66 @@ export function useTube() {
         label: `${new Date(l.at).toLocaleString()} · ${l.event} · ${l.target}`,
       })),
       uploadScreen: screen === "upload",
+      importsScreen: screen === "imports",
+      importsLoading: importsQ.isLoading,
+      hasImports: !!importsQ.data?.length,
+      importBusy,
+      imports: (importsQ.data || []).map((s: any) => {
+        const busy = [
+          "queued",
+          "preparing",
+          "scanning",
+          "downloading",
+          "cancelling",
+        ].includes(s.state);
+        const items = s.items || [];
+        const saved = items.filter((i: any) => i.state === "saved").length;
+        const failed = items.filter((i: any) => i.state === "failed").length;
+        return {
+          ...s,
+          busy,
+          canCancel: busy && s.state !== "cancelling",
+          canCheck: !busy,
+          canRemove: !busy,
+          stateLabel:
+            (
+              {
+                queued: "Waiting",
+                preparing: "Preparing tools",
+                scanning: "Checking YouTube",
+                downloading: "Importing",
+                completed: "Up to date",
+                partial: "Some videos need attention",
+                failed: "Needs attention",
+                cancelling: "Cancelling",
+                cancelled: "Cancelled",
+              } as any
+            )[s.state] || s.state,
+          summary: `${s.kind === "channel" ? "Channel · newest uploads" : `Playlist · ${s.playlist_order === "last" ? "end" : "start"} of playlist`} · up to ${s.latest} videos per check · ${s.auto_hours ? "daily checks" : "manual checks"}`,
+          counts: `Recent results: ${saved} saved · ${failed} need attention`,
+          timing:
+            busy && s.started
+              ? `Started ${new Date(s.started).toLocaleTimeString()}. You can leave this page; imports continue on the server.`
+              : s.finished
+                ? `Last finished ${new Date(s.finished).toLocaleString()}${s.auto_hours ? ` · Next check ${new Date(s.next_check).toLocaleString()}` : ""}`
+                : "Waiting for the server to start this import.",
+          items: items.map((i: any) => ({
+            ...i,
+            active: i.state === "downloading",
+            playable: i.state === "saved" && !!i.video_id,
+            percent:
+              i.total > 0
+                ? Math.min(99, Math.floor((100 * i.bytes) / i.total))
+                : null,
+            progressLabel:
+              i.state === "saving"
+                ? "Downloaded · verifying and saving…"
+                : i.state === "downloading"
+                  ? `${(i.bytes / 1048576).toFixed(1)} MiB downloaded${i.total > 0 ? ` of ${(i.total / 1048576).toFixed(1)} MiB` : " · total size not supplied by YouTube"}`
+                  : i.message,
+          })),
+        };
+      }),
       uploadHelp: `Up to ${me.upload_mb || 2048} MiB per file. Uploads can resume after an interruption.`,
       uploadTasks: tasks,
       uploadVisibility,
@@ -1408,7 +1633,10 @@ export function useTube() {
         ...f,
         value: form[f.key],
       })),
-      dialogActions: dialog?.actions || [],
+      dialogActions: (dialog?.actions || []).map((a: any) => ({
+        ...a,
+        disabled: a.intent.startsWith("youtube-") && importBusy,
+      })),
     },
   };
 }

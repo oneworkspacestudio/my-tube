@@ -256,7 +256,7 @@ export function Alert(p: P) {
 export function Metric(p: P) {
   if (p.tone === "progress")
     return h("progress", {
-      value: Math.min(100, Math.max(0, Number(p.value) || 0)),
+        value: p.value == null ? undefined : Math.min(100, Math.max(0, Number(p.value) || 0)),
       max: 100,
     });
   return h("strong", { className: "metric" }, p.value ?? 0);

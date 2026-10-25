@@ -15,6 +15,16 @@
   --hover: #f0f4f5;
   --shadow: 0 20px 70px #1b45451a;
 }
+.import-sources { gap: 20px; }
+.import-source { display: flex; flex-direction: column; gap: 14px; padding: 24px; min-width: 0; }
+.import-source > a { overflow-wrap: anywhere; }
+.import-heading, .import-actions { flex-wrap: wrap; }
+.import-heading > .stack { flex: 1; min-width: 160px; }
+.import-items { gap: 10px; max-height: 420px; overflow-y: auto; overscroll-behavior: contain; }
+.import-item { padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.import-item .row { align-items: start; flex-wrap: wrap; }
+.import-item .strong { overflow-wrap: anywhere; }
+.import-item progress { width: 100%; }
 * {
   box-sizing: border-box;
 }

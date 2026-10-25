@@ -54,6 +54,7 @@ export function Dialog({
               payload={item.payload}
               variant={item.variant}
               icon={item.icon}
+              disabled={item.disabled}
             >
               {item.label}
             </Button>

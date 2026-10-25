@@ -127,6 +127,9 @@ export function Tube({
           <Button intent="playlists" variant="nav" icon="ListVideo">
             Playlists
           </Button>
+          <Button intent="imports" variant="nav" icon="Download">
+            YouTube imports
+          </Button>
           <Button intent="settings" variant="nav" icon="Settings2">
             Settings
           </Button>
@@ -852,6 +855,9 @@ export function Tube({
                 <Button intent="studio" variant="outline" icon="ArrowLeft">
                   Creator Studio
                 </Button>
+                <Button intent="imports" variant="outline" icon="Download">
+                  Import from YouTube
+                </Button>
               </Row>
               <Card region="dropzone">
                 <Icon name="CloudUpload" />
@@ -903,6 +909,160 @@ export function Tube({
                 <Button intent="drive" variant="outline" icon="FolderOpen">
                   Or import from My Drive
                 </Button>
+              )}
+            </>
+          )}
+          {data.app.importsScreen && (
+            <>
+              <Row region="page-heading">
+                <Stack>
+                  <Text tone="eyebrow">BRING YOUR FAVOURITES HOME</Text>
+                  <Heading level={1}>YouTube imports</Heading>
+                  <Text tone="muted">
+                    Save channels and playlists to your private My Tube library.
+                  </Text>
+                </Stack>
+                <Button
+                  intent="youtube-add"
+                  variant="primary"
+                  icon="Plus"
+                  disabled={data.app.importBusy}
+                >
+                  Add channel or playlist
+                </Button>
+              </Row>
+              <Card region="settings-card">
+                <Heading level={2}>Your library, available locally</Heading>
+                <Text tone="body">
+                  Paste a YouTube channel, @handle or playlist. Choose up to 50
+                  videos per check and optional daily updates. Downloads
+                  continue when you leave this page.
+                </Text>
+                <Text tone="small">
+                  Channels check newest uploads. For playlists, choose the end
+                  for latest additions or the start for newest-first lists.
+                  Available MP4 videos download at up to 720p; quality depends
+                  on YouTube. Private, live and sign-in-only videos are skipped
+                  with a clear result.
+                </Text>
+              </Card>
+              {data.app.importsLoading && (
+                <Text tone="muted">Loading your saved sources…</Text>
+              )}
+              {data.app.hasImports ? (
+                <Stack region="import-sources">
+                  {data.app.imports.map((item, i) => (
+                    <Card key={i} region="import-source">
+                      <Row region="import-heading">
+                        <Icon name="Download" />
+                        <Stack>
+                          <Heading level={2}>{item.title}</Heading>
+                          <Text tone="muted">{item.summary}</Text>
+                        </Stack>
+                        <Spacer />
+                        <Badge>{item.stateLabel}</Badge>
+                      </Row>
+                      <Link href={item.url}>{item.url}</Link>
+                      <Text tone="body">{item.message}</Text>
+                      <Text tone="small">{item.counts}</Text>
+                      <Text tone="small">{item.timing}</Text>
+                      <Row region="import-actions">
+                        {item.canCheck && (
+                          <Button
+                            intent="youtube-sync"
+                            payload={item.id}
+                            variant="primary"
+                            icon="RefreshCw"
+                            disabled={data.app.importBusy}
+                          >
+                            Check for new videos
+                          </Button>
+                        )}
+                        {item.canCancel && (
+                          <Button
+                            intent="youtube-cancel"
+                            payload={item.id}
+                            variant="outline"
+                            icon="X"
+                            disabled={data.app.importBusy}
+                          >
+                            Cancel import
+                          </Button>
+                        )}
+                        <Button
+                          intent="open-playlist"
+                          payload={item.playlist_id}
+                          variant="outline"
+                          icon="ListVideo"
+                        >
+                          Open imported playlist
+                        </Button>
+                        <Button
+                          intent="youtube-settings"
+                          payload={item.id}
+                          variant="outline"
+                          icon="Settings2"
+                        >
+                          Settings
+                        </Button>
+                        {item.canRemove && (
+                          <Button
+                            intent="youtube-remove"
+                            payload={item.id}
+                            variant="text"
+                            disabled={data.app.importBusy}
+                          >
+                            Remove source
+                          </Button>
+                        )}
+                      </Row>
+                      <Stack region="import-items">
+                        {item.items.map((item, i) => (
+                          <Card key={i} region="import-item">
+                            <Row>
+                              <Text tone="strong">{item.title}</Text>
+                              <Spacer />
+                              <Badge>{item.state}</Badge>
+                            </Row>
+                            {item.active && (
+                              <Metric tone="progress" value={item.percent} />
+                            )}
+                            <Text tone="small">{item.progressLabel}</Text>
+                            {item.playable && (
+                              <Button
+                                intent="watch"
+                                payload={item.video_id}
+                                variant="text"
+                                icon="Play"
+                              >
+                                Watch video
+                              </Button>
+                            )}
+                          </Card>
+                        ))}
+                      </Stack>
+                    </Card>
+                  ))}
+                </Stack>
+              ) : (
+                <Stack>
+                  {data.app.signedIn && (
+                    <Card region="settings-card">
+                      <Heading level={2}>Add your first channel</Heading>
+                      <Text tone="muted">
+                        Your saved sources and downloaded videos appear here.
+                        Rechecking a source skips videos already imported.
+                      </Text>
+                      <Button
+                        intent="youtube-add"
+                        variant="outline"
+                        icon="Plus"
+                      >
+                        Add channel or playlist
+                      </Button>
+                    </Card>
+                  )}
+                </Stack>
               )}
             </>
           )}

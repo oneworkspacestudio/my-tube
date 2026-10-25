@@ -2,10 +2,10 @@
   <img src="docs/branding/my-tube.svg" alt="My Tube logo" width="112" height="112">
   <h1>My Tube</h1>
   <p>Your videos, channels and community.</p>
-  <p><a href="https://github.com/oneworkspacestudio/my-tube/releases"><strong>Download for Windows</strong></a> · <a href="https://github.com/oneworkspacestudio/one-workspace">One Workspace</a></p>
+  <p><a href="https://github.com/oneworkspacestudio/my-tube/releases"><strong>Download for Windows or Linux</strong></a> · <a href="https://github.com/oneworkspacestudio/one-workspace">One Workspace</a></p>
 </div>
 
-Your videos, channels and community, in a portable Windows application for
+Your videos, channels and community, in a portable application for
 [One Workspace](https://github.com/oneworkspacestudio/one-workspace).
 
 **Preview:** the working upload/playback, social, storage and identity workflows
@@ -32,6 +32,15 @@ For an explicitly single-user, loopback-only library, use **Start-local.cmd** or
 This mode uses a one-use owner sign-in link. It cannot be exposed remotely or
 installed as a Windows service. Normal multi-user operation uses MyAccounts.
 
+## Run on Linux x64
+
+Use the Linux amd64 archive on Ubuntu/Debian with a dedicated directory on a
+filesystem supporting Unix permissions. Verify `SHA256SUMS.txt`, extract and run
+`./my-tube --local` for a private local library, or `./my-tube` for MyAccounts
+setup. The Linux build is cross-compiled; Linux runtime and service/reboot
+acceptance have not been performed for this preview. See [media setup](docs/MEDIA.md)
+for FFmpeg/FFprobe configuration on Linux.
+
 ## What works
 
 - Multiple uploads, drag/drop, acknowledged chunk checkpoints, retry/resume,
@@ -47,6 +56,9 @@ installed as a Windows service. Normal multi-user operation uses MyAccounts.
   Watch Later, playlists, history/resume and explainable recommendations.
 - User-scoped Quantum import/export, standalone media storage, administrative
   quotas/configuration/jobs/reports/audit, storage reconciliation and CLI backups.
+- YouTube channel and playlist imports: save a source, download recent videos
+  into private playlists, skip duplicates and optionally check daily. See
+  [YouTube imports](docs/YOUTUBE-IMPORTS.md) for setup, storage and availability.
 - OIDC discovery, code + PKCE, signed token validation, server sessions,
   CSRF/Origin protection, and checks on metadata and every media derivative.
 

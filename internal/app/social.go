@@ -323,6 +323,11 @@ func (a *App) DeletePlaylist(w http.ResponseWriter, r *http.Request) {
 	if !a.playlistOwner(w, r) {
 		return
 	}
+	var importState string
+	if a.Store.DB.QueryRow("SELECT state FROM youtube_sources WHERE playlist_id=?", r.PathValue("id")).Scan(&importState) == nil && youtubeBusy(importState) {
+		problem(w, 409, "Cancel this playlist’s YouTube import before deleting it")
+		return
+	}
 	a.Store.DB.Exec("DELETE FROM playlist_search WHERE rowid=(SELECT rowid FROM playlists WHERE id=?)", r.PathValue("id"))
 	_, e := a.Store.DB.Exec("DELETE FROM playlists WHERE id=?", r.PathValue("id"))
 	a.failure(w, e)

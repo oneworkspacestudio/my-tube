@@ -29,6 +29,9 @@ type App struct {
 	cancel                   context.CancelFunc
 	workers                  sync.WaitGroup
 	helpers                  mediaHelpers
+	youtubeMu                sync.Mutex
+	youtubeCancel            context.CancelFunc
+	youtubeActive            string
 }
 type rate struct {
 	count int
@@ -62,6 +65,8 @@ func New(c Config, assets fs.FS, logger *log.Logger) (*App, error) {
 func (a *App) StartWorkers() {
 	ctx, cancel := context.WithCancel(context.Background())
 	a.cancel = cancel
+	a.workers.Add(1)
+	go func() { defer a.workers.Done(); a.youtubeWorker(ctx) }()
 	if a.Config.Transcode {
 		a.queueUnoptimised()
 		if a.Config.AutoHelpers {
@@ -152,6 +157,9 @@ func (a *App) Handler() http.Handler {
 		{"GET /api/notifications", a.Notifications, false}, {"POST /api/notifications/read", a.ReadNotifications, false}, {"PUT /api/preferences", a.Preferences, false}, {"GET /api/studio", a.Studio, false}, {"POST /api/videos/{id}/report", a.Report, false},
 		{"GET /api/admin", a.Admin, false}, {"GET /api/admin/update", a.CheckUpdate, false}, {"PUT /api/admin/config", a.AdminConfig, false}, {"PUT /api/admin/users/{id}", a.AdminUser, false}, {"POST /api/admin/reconcile", a.Reconcile, false}, {"PUT /api/admin/reports/{id}", a.ResolveReport, false},
 		{"POST /api/drive/list", a.DriveList, false}, {"POST /api/drive/import", a.DriveImport, false}, {"POST /api/videos/{id}/drive-export", a.DriveExport, false},
+		{"GET /api/youtube", a.YouTubeList, false}, {"POST /api/youtube", a.YouTubeAdd, false},
+		{"POST /api/youtube/{id}/sync", a.YouTubeSync, false}, {"POST /api/youtube/{id}/cancel", a.YouTubeCancel, false},
+		{"PUT /api/youtube/{id}", a.YouTubeSettings, false}, {"DELETE /api/youtube/{id}", a.YouTubeRemove, false},
 	}
 	for _, rt := range routes {
 		fn := a.Require(rt.fn)

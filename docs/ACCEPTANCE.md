@@ -1,5 +1,16 @@
 # Preview acceptance
 
+## YouTube import preview 3
+
+This version adds YouTube source tracking/downloads and Linux x64 packaging.
+Frontend generation, TypeScript/Vite and Windows/Linux x64 compilation pass.
+No new automated tests or real YouTube download workflow was run for this change.
+Historical checks below apply to the versions named there. This is a prerelease;
+do not read the older playback/auth checks as YouTube import acceptance.
+Builds use Go 1.27.3. Helpers remain separate pinned upstream downloads.
+
+## Earlier preview evidence
+
 The preview has a working native application. It is not designated stable until
 the remaining deployment matrix is completed.
 

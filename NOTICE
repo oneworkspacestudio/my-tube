@@ -16,3 +16,10 @@ build configuration; see docs/MEDIA.md and https://ffmpeg.org/legal.html.
 
 The sample MP4 was generated with FFmpeg’s testsrc2 filter and contains no
 third-party recordings. Product screenshots use only disposable test data.
+
+YouTube imports optionally download checksum-pinned standalone yt-dlp and Deno
+directly from their upstream releases. They run as separate processes and are
+not included in the My Tube binary. yt-dlp is Unlicense with separately licensed
+bundled dependencies; Deno is MIT with bundled dependencies. Preserve upstream
+notices: https://github.com/yt-dlp/yt-dlp and https://github.com/denoland/deno.
+Version pins and source/license links are documented in docs/YOUTUBE-IMPORTS.md.

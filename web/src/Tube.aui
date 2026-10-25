@@ -30,6 +30,7 @@ Page Tube
       Button intent=channel variant=nav icon=CircleUserRound "Your channel"
       Button intent=studio variant=nav icon=ChartNoAxesCombined "Creator Studio"
       Button intent=playlists variant=nav icon=ListVideo "Playlists"
+      Button intent=imports variant=nav icon=Download "YouTube imports"
       Button intent=settings variant=nav icon=Settings2 "Settings"
       Spacer
       Stack region=sidebar-footer
@@ -315,6 +316,7 @@ Page Tube
             Heading level=1 "Upload your videos"
             Text tone=muted $app.uploadHelp
           Button intent=studio variant=outline icon=ArrowLeft "Creator Studio"
+          Button intent=imports variant=outline icon=Download "Import from YouTube"
         Card region=dropzone
           Icon name=CloudUpload
           Heading level=2 "Drop your next story here"
@@ -333,6 +335,62 @@ Page Tube
             Button intent=cancel-upload payload=$item.id variant=text "Cancel"
         If condition=$app.driveEnabled
           Button intent=drive variant=outline icon=FolderOpen "Or import from My Drive"
+      If condition=$app.importsScreen
+        Row region=page-heading
+          Stack
+            Text tone=eyebrow "BRING YOUR FAVOURITES HOME"
+            Heading level=1 "YouTube imports"
+            Text tone=muted "Save channels and playlists to your private My Tube library."
+          Button intent=youtube-add variant=primary icon=Plus disabled=$app.importBusy "Add channel or playlist"
+        Card region=settings-card
+          Heading level=2 "Your library, available locally"
+          Text tone=body "Paste a YouTube channel, @handle or playlist. Choose up to 50 videos per check and optional daily updates. Downloads continue when you leave this page."
+          Text tone=small "Channels check newest uploads. For playlists, choose the end for latest additions or the start for newest-first lists. Available MP4 videos download at up to 720p; quality depends on YouTube. Private, live and sign-in-only videos are skipped with a clear result."
+        If condition=$app.importsLoading
+          Text tone=muted "Loading your saved sources…"
+        If condition=$app.hasImports
+          Stack region=import-sources
+            For each=$app.imports
+              Card region=import-source
+                Row region=import-heading
+                  Icon name=Download
+                  Stack
+                    Heading level=2 $item.title
+                    Text tone=muted $item.summary
+                  Spacer
+                  Badge $item.stateLabel
+                Link href=$item.url $item.url
+                Text tone=body $item.message
+                Text tone=small $item.counts
+                Text tone=small $item.timing
+                Row region=import-actions
+                  If condition=$item.canCheck
+                    Button intent=youtube-sync payload=$item.id variant=primary icon=RefreshCw disabled=$app.importBusy "Check for new videos"
+                  If condition=$item.canCancel
+                    Button intent=youtube-cancel payload=$item.id variant=outline icon=X disabled=$app.importBusy "Cancel import"
+                  Button intent=open-playlist payload=$item.playlist_id variant=outline icon=ListVideo "Open imported playlist"
+                  Button intent=youtube-settings payload=$item.id variant=outline icon=Settings2 "Settings"
+                  If condition=$item.canRemove
+                    Button intent=youtube-remove payload=$item.id variant=text disabled=$app.importBusy "Remove source"
+                Stack region=import-items
+                  For each=$item.items
+                    Card region=import-item
+                      Row
+                        Text tone=strong $item.title
+                        Spacer
+                        Badge $item.state
+                      If condition=$item.active
+                        Metric tone=progress value=$item.percent
+                      Text tone=small $item.progressLabel
+                      If condition=$item.playable
+                        Button intent=watch payload=$item.video_id variant=text icon=Play "Watch video"
+        Else
+          Stack
+            If condition=$app.signedIn
+              Card region=settings-card
+                Heading level=2 "Add your first channel"
+                Text tone=muted "Your saved sources and downloaded videos appear here. Rechecking a source skips videos already imported."
+                Button intent=youtube-add variant=outline icon=Plus "Add channel or playlist"
     Row region=bottom-nav
       Button intent=home variant=nav icon=House "Home"
       Button intent=navigate payload=shorts variant=nav icon=Flame "Shorts"

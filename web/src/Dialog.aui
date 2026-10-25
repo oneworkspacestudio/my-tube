@@ -10,4 +10,4 @@ Page Dialog
       For each=$app.dialogFields
         Input field=$item.key kind=$item.kind value=$item.value title=$item.label options=$item.options placeholder=$item.placeholder accept=$item.accept
       For each=$app.dialogActions
-        Button intent=$item.intent payload=$item.payload variant=$item.variant icon=$item.icon $item.label
+        Button intent=$item.intent payload=$item.payload variant=$item.variant icon=$item.icon disabled=$item.disabled $item.label
