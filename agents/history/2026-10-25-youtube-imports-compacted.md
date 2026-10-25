@@ -81,3 +81,24 @@ the current suite records the1.27.2 security rebuild. Current secondary is90,
 not the historical80. Another task owns an updater tab; use a separate tab and
 respect the shared operation lock. MyAI7 is separately pending; do not select it.
 Publication, public channel promotion and secondary completion pending here.
+
+## Preview3 publication complete; secondary installation waiting
+
+Published v0.1.0-preview.3 from ed1e46cd746228ab9f56bbc2cd2115a4b153c9d8,
+locally built Go1.27.3. Windows/Linux standalone archives, sources, notices,
+standalone and managed manifests, build information and checksums: all13 public
+asset sizes/digests match local. Anonymous Windows ZIP download matches SHA256
+3f4ff41c2ead34ea169a9519df4df5b06dff37bd6934055ff1ebf299ee39a323.
+Workspace channel/pin promotion c31b168 is pushed and raw public main contains
+preview3; every earlier promoted tag is retained, including withheld decisions.
+No Workspace manager release was created; existing90 component contract retained.
+
+Secondary normal updater is already applying an independently requested MyAI7
+transaction. Do not interrupt, modify it or replay apply. Fresh separate public
+updates tab reconnects; Remote Desktop current installed90 local controller
+shows progressing8.6GB backup. Wait for that transaction to finish, then check
+again and select Tube only. Old local71/75/77 browser tabs are closed-controller
+history and must not be treated as current. Opened existing installed updater
+with normal --data updates command to view current operation, not start one.
+Remote on-screen input restored off; clipboard preference unchanged. No native
+fixture or owner import performed. Final Tube installation still required.
