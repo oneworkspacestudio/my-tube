@@ -182,3 +182,9 @@ channel promotionad5dea0 and future suite pin pushed. Prior tags/withholding
 preserved. Secondary Tube-only normal update is next; no manager91/full installer
 replacement. Raw diagnostic signed-URL metadata and partial media removed from
 this task folder on I; no C scratch created.
+
+Secondary preview4 update submitted exactly once after the fresh public channel
+check offered only Tube3->4. Download/package checks passed; current public UI
+shows stage4 compatibility/restart checking then connection loss. Do not repeat
+apply or recover while its normal protected operation runs. Public source/release
+and channel are delivered; installation and existing-source retry pending.
