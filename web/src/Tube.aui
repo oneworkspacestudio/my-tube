@@ -31,6 +31,8 @@ Page Tube
       Button intent=studio variant=nav icon=ChartNoAxesCombined "Creator Studio"
       Button intent=playlists variant=nav icon=ListVideo "Playlists"
       Button intent=imports variant=nav icon=Download "YouTube imports"
+      For each=$app.importedChannels
+        Button intent=visit-channel payload=$item.id variant=nav icon=TvMinimalPlay $item.name
       Button intent=settings variant=nav icon=Settings2 "Settings"
       Spacer
       Stack region=sidebar-footer
@@ -203,6 +205,17 @@ Page Tube
           Spacer
           If condition=$app.ownChannel
             Button intent=edit-channel variant=outline icon=Pencil "Customize channel"
+        If condition=$app.importedChannel
+          Card region=settings-card
+            Text tone=small "Your private local copy. Downloaded videos play without YouTube. New videos appear after each check."
+            Link href=$app.channelData.source_url "Original YouTube channel"
+            Text tone=body $app.channelData.import_message
+            Row
+              Button intent=imports variant=outline icon=Download "Manage downloads"
+              If condition=$app.importedChannelBusy
+                Text tone=small "Import in progress — this page refreshes automatically."
+              Else
+                Button intent=youtube-sync payload=$app.channelData.id variant=primary icon=RefreshCw disabled=$app.importBusy "Retry / check for new videos"
         Row region=chips
           Button intent=channel-videos variant=chip "Videos"
           Button intent=channel-playlists variant=chip "Playlists"
@@ -226,6 +239,15 @@ Page Tube
                       Badge tone=duration $item.durationLabel
                     Button intent=watch payload=$item.id variant=video-title $item.title
                     Text tone=small $item.stats
+        If condition=$app.showImportedChannelPending
+          Stack
+            For each=$app.importedChannelPending
+              Card region=import-item
+                Row
+                  Text tone=strong $item.title
+                  Spacer
+                  Badge $item.label
+                Text tone=small $item.message
       If condition=$app.playlistsScreen
         Row region=page-heading
           Stack
@@ -345,7 +367,7 @@ Page Tube
         Card region=settings-card
           Heading level=2 "Your library, available locally"
           Text tone=body "Paste a YouTube channel, @handle or playlist. Choose up to 50 videos per check and optional daily updates. Downloads continue when you leave this page."
-          Text tone=small "Channels check newest uploads. For playlists, choose the end for latest additions or the start for newest-first lists. Available MP4 videos download at up to 720p; quality depends on YouTube. Private, live and sign-in-only videos are skipped with a clear result."
+          Text tone=small "Channels check newest uploads. For playlists, choose the end for latest additions or the start for newest-first lists. Channel pages include their name, artwork, description and discovered videos. Available MP4 videos download at up to 480p; lower quality is used when necessary. Private, live and sign-in-only videos are skipped with a clear result."
         If condition=$app.importsLoading
           Text tone=muted "Loading your saved sources…"
         If condition=$app.hasImports
@@ -368,6 +390,8 @@ Page Tube
                     Button intent=youtube-sync payload=$item.id variant=primary icon=RefreshCw disabled=$app.importBusy "Check for new videos"
                   If condition=$item.canCancel
                     Button intent=youtube-cancel payload=$item.id variant=outline icon=X disabled=$app.importBusy "Cancel import"
+                  If condition=$item.channel_id
+                    Button intent=visit-channel payload=$item.channel_id variant=primary icon=CircleUserRound "Open channel"
                   Button intent=open-playlist payload=$item.playlist_id variant=outline icon=ListVideo "Open imported playlist"
                   Button intent=youtube-settings payload=$item.id variant=outline icon=Settings2 "Settings"
                   If condition=$item.canRemove

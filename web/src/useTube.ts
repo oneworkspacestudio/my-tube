@@ -152,7 +152,7 @@ export function useTube() {
   const videosQ = useQuery<any[]>({
     queryKey: ["videos", query.toString(), uid],
     queryFn: () => request("videos?" + query),
-    refetchInterval: screen === "studio" ? 5000 : false,
+    refetchInterval: screen === "studio" || screen === "channel" ? 5000 : false,
   });
   const watchQ = useQuery({
     queryKey: ["video", id, uid],
@@ -179,6 +179,7 @@ export function useTube() {
     queryKey: ["channel", id || me.channel_id, uid],
     queryFn: () => request("channels/" + (id || me.channel_id)),
     enabled: screen === "channel" && !!(id || me.channel_id),
+    refetchInterval: screen === "channel" ? 3000 : false,
   });
   const channelListsQ = useQuery<any[]>({
     queryKey: ["channel-playlists", channelQ.data?.owner, uid],
@@ -212,6 +213,12 @@ export function useTube() {
     queryFn: () => request("youtube"),
     enabled: screen === "imports" && signedIn,
     refetchInterval: screen === "imports" ? 1500 : false,
+  });
+  const channelsQ = useQuery<any[]>({
+    queryKey: ["channels", uid],
+    queryFn: () => request("channels"),
+    enabled: signedIn,
+    refetchInterval: screen === "imports" ? 3000 : false,
   });
   useEffect(() => {
     if (adminQ.data && !adminConfig)
@@ -441,7 +448,7 @@ export function useTube() {
               ]),
             ],
             [btn("youtube-save", "Add and download", "primary")],
-            "Videos and the matching playlist are private. Choose the end for playlists where new videos are added at the bottom. Daily checks run while My Tube is running.",
+            "A channel page is created immediately. Videos download at up to 480p and remain private, along with the matching playlist. Daily checks run while My Tube is running.",
           );
           return;
         case "youtube-save":
@@ -1510,11 +1517,43 @@ export function useTube() {
       channelBanner: c.id ? apiURL(`channels/${c.id}/image/banner`) : "",
       channelInitials: initials(c.name),
       channelAvatar: c.id ? apiURL(`channels/${c.id}/image/avatar`) : "",
-      channelDetails: `@${c.handle || ""} · ${c.subscribers || 0} subscribers`,
-      ownChannel: c.owner === uid,
+      channelDetails: c.imported
+        ? `${c.handle ? "@" + c.handle + " · " : ""}Imported channel · Private · 480p downloads`
+        : `@${c.handle || ""} · ${c.subscribers || 0} subscribers`,
+      ownChannel: c.owner === uid && !c.imported,
+      importedChannel: !!c.imported,
+      showImportedChannelPending:
+        !!c.imported && channelTab !== "about" && channelTab !== "playlists",
+      importedChannels: (channelsQ.data || []).filter(
+        (channel: any) => channel.imported,
+      ),
+      importedChannelBusy: [
+        "queued",
+        "preparing",
+        "scanning",
+        "downloading",
+        "cancelling",
+      ].includes(c.import_state),
+      importedChannelPending: (c.items || [])
+        .filter((i: any) => i.state !== "saved")
+        .map((i: any) => ({
+          ...i,
+          label:
+            (
+              {
+                queued: "Waiting to download",
+                downloading: "Downloading at up to 480p",
+                saving: "Verifying and saving",
+                failed: "Download failed",
+                interrupted: "Waiting for retry",
+              } as any
+            )[i.state] || i.state,
+        })),
       channelAbout: channelTab === "about",
       channelPlaylists: channelTab === "playlists",
-      channelLists: channelListsQ.data || [],
+      channelLists: (channelListsQ.data || []).filter(
+        (p: any) => !c.imported || p.id === c.playlist_id,
+      ),
       channelVideos: videos,
       playlistsScreen: screen === "playlists",
       playlists: (playlistsQ.data || []).map((p) => ({
@@ -1595,7 +1634,7 @@ export function useTube() {
                 cancelled: "Cancelled",
               } as any
             )[s.state] || s.state,
-          summary: `${s.kind === "channel" ? "Channel · newest uploads" : `Playlist · ${s.playlist_order === "last" ? "end" : "start"} of playlist`} · up to ${s.latest} videos per check · ${s.auto_hours ? "daily checks" : "manual checks"}`,
+          summary: `${s.kind === "channel" ? "Channel · newest uploads" : `Playlist · ${s.playlist_order === "last" ? "end" : "start"} of playlist`} · 480p · up to ${s.latest} videos per check · ${s.auto_hours ? "daily checks" : "manual checks"}`,
           counts: `Recent results: ${saved} saved · ${failed} need attention`,
           timing:
             busy && s.started

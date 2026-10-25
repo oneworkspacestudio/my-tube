@@ -143,3 +143,35 @@ verifying an older copy before retirement; file totals may reset during stage9.
 This was normal progress, not a repeated apply or failed installation. Public
 tunnel loss/Cloudflare1033 during snapshot recovered after restart; exactly one
 Tube apply was used. Source tag3 remains ated1e46c; later handoffs are docs only.
+
+## Import repair after preview3 delivery
+
+Owner reported all five selected public videos failed and expected a channel
+page rather than only a playlist. Continued the authorized Tube release/install
+work. Extraction with the exact pinned tools returned11,621,421bytes of full
+video JSON, exceeding the app's2MiB writer; the process error was hidden by the
+generic message. Projecting consumed fields returned1,834bytes successfully.
+The request now also includes duration for verification.
+
+Preview4 adds private source-backed channel pages/owner sidebar entries, name,
+about/artwork, discovered pending/failed items, saved video browsing, retry and
+refresh. Additive schema3 backfills channel sources, preserving creator identity,
+video ownership and media ACLs. Artwork is bounded/re-encoded JPEG/PNG from fixed
+YouTube image hosts with redirect checks. All selected items appear before the
+first download. Private playlists/deduplication remain. Default imports select
+480p or lower, including existing sources. Errors distinguish metadata limits,
+HTTP refusals, unavailable formats and interrupted connections.
+
+Actual downloader diagnostic also exposed FFmpeg reporting success after a TLS
+reset: video522.47s/audio446.39s versus source524s. Added bounded HTTP reconnects,
+-xerror and per-audio/video-duration verification before ordinary publication.
+That diagnostic was not a complete saved video. Automated tests were not added
+or run. Frontend generation/TypeScript/Vite and Windows/Linux builds passed before
+the final bump; final preview4 builds/packages/publication in progress. Complete
+installed repair import, Linux runtime, clean-host/reboot acceptance are pending.
+
+Artifacts are on tooling/tube-import-fix-20261026 (folder date is a task name).
+No C fixture and no live owner library used as disposable test data. Source3
+release stays immutable. Next: publish4, promote Workspace pin/channel, install
+Tube only on secondary and retry the existing requested source. Preserve90,
+MyAI7/other versions, operation locks and newest protected rollback.

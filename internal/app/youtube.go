@@ -31,6 +31,11 @@ CREATE TABLE IF NOT EXISTS youtube_sources(
  latest INTEGER NOT NULL,playlist_order TEXT NOT NULL DEFAULT 'last',auto_hours INTEGER NOT NULL DEFAULT 0,state TEXT NOT NULL DEFAULT 'queued',
  message TEXT NOT NULL DEFAULT '',created INTEGER NOT NULL,started INTEGER NOT NULL DEFAULT 0,
  finished INTEGER NOT NULL DEFAULT 0,next_check INTEGER NOT NULL DEFAULT 0,UNIQUE(owner,url));
+CREATE TABLE IF NOT EXISTS youtube_channels(
+ source_id TEXT PRIMARY KEY REFERENCES youtube_sources(id) ON DELETE CASCADE,
+ name TEXT NOT NULL,handle TEXT NOT NULL DEFAULT '',description TEXT NOT NULL DEFAULT '');
+INSERT OR IGNORE INTO youtube_channels(source_id,name,description)
+ SELECT id,title,url FROM youtube_sources WHERE kind='channel';
 CREATE TABLE IF NOT EXISTS youtube_items(
  source_id TEXT NOT NULL REFERENCES youtube_sources(id) ON DELETE CASCADE,
  remote_id TEXT NOT NULL,title TEXT NOT NULL,state TEXT NOT NULL DEFAULT 'queued',
@@ -38,6 +43,7 @@ CREATE TABLE IF NOT EXISTS youtube_items(
  bytes INTEGER NOT NULL DEFAULT 0,total INTEGER NOT NULL DEFAULT 0,updated INTEGER NOT NULL,
  PRIMARY KEY(source_id,remote_id));
 INSERT OR IGNORE INTO migrations VALUES(2,0);
+INSERT OR IGNORE INTO migrations VALUES(3,0);
 COMMIT;`
 
 var youtubeID = regexp.MustCompile(`^[A-Za-z0-9_-]{11}$`)
@@ -84,6 +90,7 @@ type youtubeSource struct {
 	Kind          string        `json:"kind"`
 	Title         string        `json:"title"`
 	Playlist      string        `json:"playlist_id"`
+	ChannelID     string        `json:"channel_id,omitempty"`
 	Latest        int           `json:"latest"`
 	PlaylistOrder string        `json:"playlist_order"`
 	AutoHours     int           `json:"auto_hours"`
@@ -108,6 +115,9 @@ const youtubeSourceCols = "id,owner,url,kind,title,playlist_id,latest,playlist_o
 
 func scanYouTube(s scanner) (v youtubeSource, e error) {
 	e = s.Scan(&v.ID, &v.Owner, &v.URL, &v.Kind, &v.Title, &v.Playlist, &v.Latest, &v.PlaylistOrder, &v.AutoHours, &v.State, &v.Message, &v.Started, &v.Finished, &v.Next)
+	if v.Kind == "channel" {
+		v.ChannelID = v.ID
+	}
 	return
 }
 func youtubeBusy(state string) bool {
@@ -228,6 +238,9 @@ func (a *App) YouTubeAdd(w http.ResponseWriter, r *http.Request) {
 	}
 	if e == nil {
 		_, e = tx.Exec("INSERT INTO youtube_sources(id,owner,url,kind,title,playlist_id,latest,playlist_order,auto_hours,created)VALUES(?,?,?,?,?,?,?,?,?,?)", id, uid, u, kind, title, pl, in.Latest, in.PlaylistOrder, in.AutoHours, now())
+	}
+	if e == nil && kind == "channel" {
+		_, e = tx.Exec("INSERT INTO youtube_channels(source_id,name,description) VALUES(?,?,?)", id, title, u)
 	}
 	if e == nil {
 		e = tx.Commit()
@@ -432,7 +445,14 @@ type youtubeEntry struct {
 	IsLive      bool           `json:"is_live"`
 	Size        int64          `json:"filesize"`
 	Approx      int64          `json:"filesize_approx"`
+	Duration    float64        `json:"duration"`
 	Entries     []youtubeEntry `json:"entries"`
+	ChannelURL  string         `json:"channel_url"`
+	UploaderID  string         `json:"uploader_id"`
+	Thumbnails  []struct {
+		URL string `json:"url"`
+		ID  string `json:"id"`
+	} `json:"thumbnails"`
 }
 
 func (a *App) importYouTube(ctx context.Context, source youtubeSource) error {
@@ -482,6 +502,45 @@ func (a *App) importYouTube(ctx context.Context, source youtubeSource) error {
 	a.writeMu.Unlock()
 	if e != nil {
 		return e
+	}
+	// Make the channel and its entire selected window browsable before the first
+	// download. A slow/failed video must not hide the remaining discovered videos.
+	if source.Kind == "channel" {
+		name := youtubeText(listing.Channel, 180)
+		if name == "" {
+			name = strings.TrimSuffix(title, " - Videos")
+		}
+		handle := youtubeText(strings.TrimPrefix(listing.UploaderID, "@"), 100)
+		if handle == "" {
+			if u, err := url.Parse(source.URL); err == nil {
+				part := strings.Split(strings.Trim(u.Path, "/"), "/")[0]
+				if strings.HasPrefix(part, "@") {
+					handle = youtubeText(strings.TrimPrefix(part, "@"), 100)
+				}
+			}
+		}
+		description := youtubeText(listing.Description, 9000)
+		if _, e = a.Store.DB.Exec("UPDATE youtube_channels SET name=?,handle=?,description=? WHERE source_id=?", name, handle, description, source.ID); e != nil {
+			return e
+		}
+	}
+	for i, entry := range listing.Entries {
+		if i >= source.Latest {
+			break
+		}
+		if !youtubeID.MatchString(entry.ID) {
+			continue
+		}
+		if _, e = a.Store.DB.Exec(`INSERT INTO youtube_items(source_id,remote_id,title,updated) VALUES(?,?,?,?)
+   ON CONFLICT(source_id,remote_id) DO UPDATE SET title=excluded.title,
+   state=CASE WHEN youtube_items.state='saved' THEN 'saved' ELSE 'queued' END,
+   message=CASE WHEN youtube_items.state='saved' THEN youtube_items.message ELSE 'Waiting to download at up to 480p' END,
+   updated=excluded.updated`, source.ID, entry.ID, youtubeText(entry.Title, 195), now()); e != nil {
+			return e
+		}
+	}
+	if source.Kind == "channel" {
+		a.youtubeArtwork(ctx, source.ID, listing)
 	}
 	failures, saved, skipped := 0, 0, 0
 	seen := map[string]bool{}
@@ -589,26 +648,43 @@ func (a *App) youtubeCommand(ctx context.Context, tool string, args []string, ou
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+		if b, ok := out.(*boundedYouTubeBuffer); ok && b.exceeded {
+			return errors.New("YouTube returned more metadata than this version supports. Your channel and saved videos are kept; update My Tube and retry")
+		}
+		// Log only the process outcome and a known classification. Never persist
+		// signed media URLs, response bodies or the command's complete stderr.
+		if a.Logger != nil {
+			a.Logger.Printf("YouTube helper failed: %T: %v", e, e)
+		}
 		text := strings.ToLower(stderr.String())
 		switch {
 		case strings.Contains(text, "429") || strings.Contains(text, "rate limit"):
 			return errYouTubeRateLimited
 		case strings.Contains(text, "sign in") || strings.Contains(text, "sign-in") || strings.Contains(text, "private video") || strings.Contains(text, "members-only"):
 			return errors.New("YouTube requires sign-in for this video or source; only publicly downloadable videos can be imported")
+		case strings.Contains(text, "format is not available"):
+			return errors.New("YouTube did not offer a supported MP4 download at 480p or below for this video")
 		case strings.Contains(text, "unavailable") || strings.Contains(text, "removed"):
 			return errors.New("This YouTube video or source is unavailable")
-		case strings.Contains(text, "format is not available"):
-			return errors.New("YouTube did not offer a supported MP4 download for this video")
+		case strings.Contains(text, "403") || strings.Contains(text, "forbidden"):
+			return errors.New("YouTube refused the video download (HTTP 403). Retry later; your channel and saved videos are kept")
+		case strings.Contains(text, "timed out") || strings.Contains(text, "timeout"):
+			return errors.New("The connection to YouTube timed out. Retry this import; saved videos are kept")
+		case strings.Contains(text, "partial file") || strings.Contains(text, "i/o error") || strings.Contains(text, "error in the pull function") || strings.Contains(text, "connection reset"):
+			return errors.New("The connection to YouTube was interrupted before the download finished. Retry this import; saved videos are kept")
+		case strings.Contains(text, "ffmpeg"):
+			return errors.New("The video downloader could not combine the audio and video. Retry to use a fresh download link")
 		default:
-			return errors.New("YouTube import failed. Check your connection and retry; saved videos are kept")
+			return fmt.Errorf("YouTube downloader stopped (%s). Retry this import; the channel and saved videos are kept", youtubeExitCode(e))
 		}
 	}
 	return nil
 }
 
 type boundedYouTubeBuffer struct {
-	buffer bytes.Buffer
-	limit  int
+	buffer   bytes.Buffer
+	limit    int
+	exceeded bool
 }
 type youtubeErrorBuffer struct{ tail []byte }
 
@@ -631,6 +707,7 @@ func (b *boundedYouTubeBuffer) String() string { return b.buffer.String() }
 
 func (b *boundedYouTubeBuffer) Write(p []byte) (int, error) {
 	if b.buffer.Len()+len(p) > b.limit {
+		b.exceeded = true
 		return 0, errors.New("YouTube response exceeded its limit")
 	}
 	return b.buffer.Write(p)
@@ -663,7 +740,7 @@ func (a *App) downloadYouTube(parent context.Context, tool, deno string, s youtu
 	args := youtubeArgs(deno)
 	// Prefer separate high-quality streams when verified media tools exist;
 	// otherwise use a single MP4. Both paths publish through ordinary uploads.
-	format := "best[ext=mp4][vcodec^=avc1][acodec^=mp4a][height<=720][protocol=https]/best[ext=mp4][vcodec^=avc1][acodec^=mp4a][height<=720][protocol=http]"
+	format := "best[ext=mp4][vcodec^=avc1][acodec^=mp4a][height<=480][protocol=https]/best[ext=mp4][vcodec^=avc1][acodec^=mp4a][height<=480][protocol=http]"
 	ffmpeg := a.helper(a.Config.FFmpeg, "ffmpeg")
 	if ffmpeg == "" && a.Config.AutoHelpers {
 		a.youtubeStatus(s.ID, "preparing", "Preparing video tools for YouTube downloads", false)
@@ -674,9 +751,15 @@ func (a *App) downloadYouTube(parent context.Context, tool, deno string, s youtu
 	}
 	adaptive := ffmpeg != "" && a.helper(a.Config.FFprobe, "ffprobe") != ""
 	if adaptive {
-		format = "bestvideo[ext=mp4][vcodec^=avc1][height<=720][protocol=https]+bestaudio[ext=m4a][protocol=https]/" + format
+		format = "bestvideo[ext=mp4][vcodec^=avc1][height<=480][protocol=https]+bestaudio[ext=m4a][protocol=https]/" + format
 	}
-	args = append(args, "--no-playlist", "--skip-download", "--dump-json", "--format", format, "--", watch)
+	if adaptive {
+		args = append(args, "--ffmpeg-location", ffmpeg)
+	}
+	// dump-json includes every format and caption track (over 11 MiB for an
+	// ordinary video). Project only the fields we consume before applying the
+	// bounded response writer; increasing the cap merely postpones the failure.
+	args = append(args, "--no-playlist", "--skip-download", "--print", "%(.{id,title,description,channel,uploader,live_status,is_live,filesize,filesize_approx,duration})j", "--format", format, "--", watch)
 	metadata := &boundedYouTubeBuffer{limit: 2 << 20}
 	if e := a.youtubeCommand(ctx, tool, args, metadata); e != nil {
 		return e
@@ -747,7 +830,7 @@ func (a *App) downloadYouTube(parent context.Context, tool, deno string, s youtu
 	if adaptive {
 		// Stream a fragmented MP4 directly into our quota-limited writer. This
 		// avoids complete audio/video/merged staging copies on the host disk.
-		args = append(args, "--ffmpeg-location", ffmpeg, "--downloader", "ffmpeg", "--downloader-args", "ffmpeg_o:-f mp4 -movflags +frag_keyframe+empty_moov+default_base_moof -loglevel error -nostats", "--downloader-args", "ffmpeg_i:-rw_timeout 20000000")
+		args = append(args, "--ffmpeg-location", ffmpeg, "--downloader", "ffmpeg", "--downloader-args", "ffmpeg_o:-f mp4 -movflags +frag_keyframe+empty_moov+default_base_moof -loglevel error -nostats -xerror", "--downloader-args", "ffmpeg_i:-rw_timeout 20000000 -reconnect 1 -reconnect_streamed 1 -reconnect_on_network_error 1 -reconnect_on_http_error 5xx -reconnect_delay_max 5 -reconnect_max_retries 3 -reconnect_delay_total_max 30")
 	}
 	args = append(args, "--no-playlist", "--no-progress", "--no-part", "--no-continue", "--fixup", "never", "--hls-prefer-native", "--format", format, "--max-filesize", strconv.FormatInt(bound, 10), "--output", "-", "--", watch)
 	e = a.youtubeCommand(ctx, tool, args, writer)
@@ -771,6 +854,11 @@ func (a *App) downloadYouTube(parent context.Context, tool, deno string, s youtu
 		return ctx.Err()
 	}
 	a.youtubeItemState(s.ID, entry.ID, "saving", "Download finished; verifying and saving video")
+	if adaptive {
+		if e = a.verifyYouTubeDownload(ctx, a.incoming(u.ID), detail.Duration); e != nil {
+			return e
+		}
+	}
 	a.writeMu.Lock()
 	u.Size = writer.n
 	u.Offset = writer.n

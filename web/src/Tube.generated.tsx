@@ -130,6 +130,17 @@ export function Tube({
           <Button intent="imports" variant="nav" icon="Download">
             YouTube imports
           </Button>
+          {data.app.importedChannels.map((item, i) => (
+            <Button
+              key={i}
+              intent="visit-channel"
+              payload={item.id}
+              variant="nav"
+              icon="TvMinimalPlay"
+            >
+              {item.name}
+            </Button>
+          ))}
           <Button intent="settings" variant="nav" icon="Settings2">
             Settings
           </Button>
@@ -567,6 +578,38 @@ export function Tube({
                   </Button>
                 )}
               </Row>
+              {data.app.importedChannel && (
+                <Card region="settings-card">
+                  <Text tone="small">
+                    Your private local copy. Downloaded videos play without
+                    YouTube. New videos appear after each check.
+                  </Text>
+                  <Link href={data.app.channelData.source_url}>
+                    Original YouTube channel
+                  </Link>
+                  <Text tone="body">{data.app.channelData.import_message}</Text>
+                  <Row>
+                    <Button intent="imports" variant="outline" icon="Download">
+                      Manage downloads
+                    </Button>
+                    {data.app.importedChannelBusy ? (
+                      <Text tone="small">
+                        Import in progress — this page refreshes automatically.
+                      </Text>
+                    ) : (
+                      <Button
+                        intent="youtube-sync"
+                        payload={data.app.channelData.id}
+                        variant="primary"
+                        icon="RefreshCw"
+                        disabled={data.app.importBusy}
+                      >
+                        Retry / check for new videos
+                      </Button>
+                    )}
+                  </Row>
+                </Card>
+              )}
               <Row region="chips">
                 <Button intent="channel-videos" variant="chip">
                   Videos
@@ -627,6 +670,20 @@ export function Tube({
                       ))}
                     </Grid>
                   )}
+                </Stack>
+              )}
+              {data.app.showImportedChannelPending && (
+                <Stack>
+                  {data.app.importedChannelPending.map((item, i) => (
+                    <Card key={i} region="import-item">
+                      <Row>
+                        <Text tone="strong">{item.title}</Text>
+                        <Spacer />
+                        <Badge>{item.label}</Badge>
+                      </Row>
+                      <Text tone="small">{item.message}</Text>
+                    </Card>
+                  ))}
                 </Stack>
               )}
             </>
@@ -941,9 +998,10 @@ export function Tube({
                 <Text tone="small">
                   Channels check newest uploads. For playlists, choose the end
                   for latest additions or the start for newest-first lists.
-                  Available MP4 videos download at up to 720p; quality depends
-                  on YouTube. Private, live and sign-in-only videos are skipped
-                  with a clear result.
+                  Channel pages include their name, artwork, description and
+                  discovered videos. Available MP4 videos download at up to
+                  480p; lower quality is used when necessary. Private, live and
+                  sign-in-only videos are skipped with a clear result.
                 </Text>
               </Card>
               {data.app.importsLoading && (
@@ -987,6 +1045,16 @@ export function Tube({
                             disabled={data.app.importBusy}
                           >
                             Cancel import
+                          </Button>
+                        )}
+                        {item.channel_id && (
+                          <Button
+                            intent="visit-channel"
+                            payload={item.channel_id}
+                            variant="primary"
+                            icon="CircleUserRound"
+                          >
+                            Open channel
                           </Button>
                         )}
                         <Button

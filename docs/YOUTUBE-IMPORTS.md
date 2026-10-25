@@ -10,6 +10,10 @@ on the upload page. Select **Add channel or playlist**, paste a channel URL,
   **Start of playlist** window for newest-first playlists. This follows playlist
   position, not a promised upload-date sort. Reading the end of a large playlist
   can take longer; source scanning is limited to five minutes.
+- Each channel also gets a private, browsable channel page and sidebar entry,
+  with its name, description, available artwork and discovered videos. The page
+  appears before downloads finish and refreshes as videos are saved. Existing
+  channel sources gain their page automatically; recheck to refresh metadata.
 - Each source has its own private My Tube playlist. Videos belong to the signed
   in account and default to private. Original titles, descriptions, creator names
   and source links are retained. A private library channel is created on the
@@ -46,12 +50,17 @@ is counted as saved only after verification and publication. Completed/cancelled
 items do not keep an active progress bar. Each failed video has a result and
 other available videos in the batch can continue.
 
-Imports select H.264/AAC MP4 at up to 720p. With FFmpeg/FFprobe available, separate
+Imports default to H.264/AAC MP4 at up to **480p**, falling back to lower available
+resolutions. This applies to existing sources when they next download, too.
+With FFmpeg/FFprobe available, separate
 audio/video streams are muxed directly into a bounded fragmented MP4 stream;
 there are no full separate/merged staging copies. Without these helpers, the
 best available single-file MP4 is used, which may be a lower resolution. Existing
 automatic FFmpeg preparation is used on Windows; Linux operators can configure
 their FFmpeg/FFprobe paths as described in [media setup](MEDIA.md).
+Interrupted adaptive streams retry their connections within a bounded time.
+Input errors fail the download, and both the audio and video duration are checked
+before publication, so a truncated file is not reported as saved.
 
 Only publicly downloadable videos are supported. Private, member-only,
 sign-in-only, age-restricted, unavailable and live/upcoming videos may fail and
@@ -85,6 +94,12 @@ arguments; no shell is used. Each video is time/byte/quota bounded. Windows uses
 a kill-on-close job with process/memory limits; Unix uses a process group for
 tree cancellation. This is not an operating-system sandbox for hostile decoders.
 
-Source/item state uses additive SQLite schema version 2 and is included in normal
-My Tube backups. Restore with this or a newer build; older schema-1 executables
+Source/item/channel state uses additive SQLite schema version 3 and is included in normal
+My Tube backups. Restore with this or a newer build; older executables
 cannot open the migrated database. No credentials are kept in source records.
+
+The downloader requests only the video metadata fields My Tube consumes. Full
+YouTube metadata can exceed 11 MiB because it includes format and caption data;
+it is not buffered in the app. Metadata responses remain bounded, and HTTP
+refusals, timeouts, unsupported formats and oversized responses have separate
+messages. Retry from the channel or source card; already saved videos are kept.

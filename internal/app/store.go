@@ -107,7 +107,7 @@ func OpenStore(dir string) (*Store, error) {
 		var v, app int
 		db.QueryRow("SELECT MAX(version) FROM migrations").Scan(&v)
 		db.QueryRow("PRAGMA application_id").Scan(&app)
-		if (v != 1 && v != 2) || app != 1297372482 {
+		if (v != 1 && v != 2 && v != 3) || app != 1297372482 {
 			return fail(errors.New("unsupported database version or application"))
 		}
 	}

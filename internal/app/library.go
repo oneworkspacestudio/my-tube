@@ -81,6 +81,16 @@ func (a *App) video(id, uid string) (Video, error) {
 	return v, nil
 }
 func (a *App) enrich(v *Video, uid string) {
+	// Source channels are private collections, never a second identity/account.
+	// Preserve the original video ACL and expose source membership only to owner.
+	if uid != "" && v.Owner == uid {
+		var id, name, handle string
+		if a.Store.DB.QueryRow(`SELECT s.id,c.name,c.handle FROM youtube_items i
+   JOIN youtube_sources s ON s.id=i.source_id JOIN youtube_channels c ON c.source_id=s.id
+   WHERE i.video_id=? AND s.owner=? ORDER BY s.created,s.id LIMIT 1`, v.ID, uid).Scan(&id, &name, &handle) == nil {
+			v.ChannelID, v.Channel, v.Handle = id, name, handle
+		}
+	}
 	a.Store.DB.QueryRow("SELECT count(*) FROM likes WHERE video_id=?", v.ID).Scan(&v.Likes)
 	if uid != "" {
 		a.Store.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM likes WHERE user_id=? AND video_id=?),EXISTS(SELECT 1 FROM later WHERE user_id=? AND video_id=?),EXISTS(SELECT 1 FROM subscriptions WHERE user_id=? AND channel_id=?)", uid, v.ID, uid, v.ID, uid, v.ChannelID).Scan(&v.Liked, &v.Later, &v.Subscribed)
@@ -104,8 +114,8 @@ func (a *App) ListVideos(w http.ResponseWriter, r *http.Request) {
 		args = append(args, `"`+strings.ReplaceAll(search, `"`, `""`)+`"`)
 	}
 	if ch := q.Get("channel"); ch != "" {
-		where += " AND v.channel_id=?"
-		args = append(args, ch)
+		where += " AND (v.channel_id=? OR EXISTS(SELECT 1 FROM youtube_items yi JOIN youtube_sources ys ON ys.id=yi.source_id WHERE yi.video_id=v.id AND ys.id=? AND ys.owner=? AND ys.kind='channel'))"
+		args = append(args, ch, ch, uid)
 	}
 	if cat := q.Get("category"); cat != "" && cat != "All" {
 		where += " AND v.category=?"
@@ -358,16 +368,22 @@ func (a *App) VideoAccess(w http.ResponseWriter, r *http.Request) {
 }
 
 type Channel struct {
-	ID          string `json:"id"`
-	Owner       string `json:"owner"`
-	Name        string `json:"name"`
-	Handle      string `json:"handle"`
-	Description string `json:"description"`
-	Avatar      string `json:"avatar"`
-	Banner      string `json:"banner"`
-	Visibility  string `json:"visibility"`
-	Subscribers int    `json:"subscribers"`
-	Subscribed  bool   `json:"subscribed"`
+	ID            string        `json:"id"`
+	Owner         string        `json:"owner"`
+	Name          string        `json:"name"`
+	Handle        string        `json:"handle"`
+	Description   string        `json:"description"`
+	Avatar        string        `json:"avatar"`
+	Banner        string        `json:"banner"`
+	Visibility    string        `json:"visibility"`
+	Subscribers   int           `json:"subscribers"`
+	Subscribed    bool          `json:"subscribed"`
+	Imported      bool          `json:"imported"`
+	SourceURL     string        `json:"source_url,omitempty"`
+	Playlist      string        `json:"playlist_id,omitempty"`
+	ImportState   string        `json:"import_state,omitempty"`
+	ImportMessage string        `json:"import_message,omitempty"`
+	Items         []youtubeItem `json:"items,omitempty"`
 }
 
 const channelCols = "c.id,c.owner,c.name,c.handle,c.description,c.avatar,c.banner,c.visibility,(SELECT count(*) FROM subscriptions WHERE channel_id=c.id)"
@@ -392,11 +408,21 @@ func (a *App) Channels(w http.ResponseWriter, r *http.Request) {
 			out = append(out, c)
 		}
 	}
+	rows.Close()
+	imported, e := a.youtubeChannels(uid)
+	if e != nil {
+		a.failure(w, e)
+		return
+	}
+	out = append(out, imported...)
 	respond(w, 200, out)
 }
 func (a *App) Channel(w http.ResponseWriter, r *http.Request) {
 	uid := who(r).User.ID
 	c, e := scanChannel(a.Store.DB.QueryRow("SELECT "+channelCols+" FROM channels c WHERE id=? OR handle=?", r.PathValue("id"), strings.TrimPrefix(r.PathValue("id"), "@")))
+	if e != nil {
+		c, e = a.youtubeChannel(r.PathValue("id"), uid)
+	}
 	if e != nil || (c.Owner != uid && (c.Visibility == "private" || uid == "" && !a.Config.PublicAccess)) {
 		problem(w, 404, "Channel unavailable")
 		return

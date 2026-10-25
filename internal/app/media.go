@@ -466,6 +466,11 @@ func (a *App) GetChannelImage(w http.ResponseWriter, r *http.Request) {
 	uid := who(r).User.ID
 	var owner, vis string
 	e := a.Store.DB.QueryRow("SELECT owner,visibility FROM channels WHERE id=?", r.PathValue("id")).Scan(&owner, &vis)
+	if e != nil {
+		if err := a.Store.DB.QueryRow("SELECT owner FROM youtube_sources WHERE id=? AND kind='channel' AND owner=?", r.PathValue("id"), uid).Scan(&owner); err == nil {
+			vis, e = "private", nil
+		}
+	}
 	kind := r.PathValue("kind")
 	if e != nil || kind != "avatar" && kind != "banner" || owner != uid && (vis == "private" || uid == "" && !a.Config.PublicAccess) {
 		problem(w, 404, "Channel unavailable")
