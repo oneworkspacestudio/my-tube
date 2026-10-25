@@ -102,3 +102,44 @@ history and must not be treated as current. Opened existing installed updater
 with normal --data updates command to view current operation, not start one.
 Remote on-screen input restored off; clipboard preference unchanged. No native
 fixture or owner import performed. Final Tube installation still required.
+
+## Secondary Tube3 operation accepted
+
+Independent MyAI7 operation completed healthy in32m26s. Fresh anonymous-channel
+check on secondary90 shows MyAI7 current and exactly one available checkbox:
+My Tube2 ->3. Captured displayed pre-update version rows, then submitted exactly
+one normal Back up and install selected updates action for Tube only. Download
+and package checks passed; operation reached storage/restart checking. Do not
+replay apply if its public tunnel disconnects. Wait for backup/install/startup/
+cleanup completion, then fresh check and open Imports to finish. Other25 displayed
+update groups are the baseline; My3D's existing metadata-review error is unrelated.
+Remote on-screen input was temporarily used a second time after Chrome closed to
+reopen the existing90 controller via normal updates command, then restored off.
+
+## Delivery complete
+
+Secondary normal Tube-only update completed healthy in23m28s. Final fresh public
+release check reports Tube0.1.0-preview.3 up to date; all25 other displayed version
+rows exactly match the pre-Tube baseline, including Workspace90/MyAI7 and the
+pre-existing My3D metadata-review warning. Newest verified recovery retained;
+normal cleanup removed one older automatic copy (~9239.1MB). Exact private receipt
+and backup path are outside the repo in tooling/tube-youtube-20261025/
+secondary-install3.json. No update applied to the primary by this task.
+
+Installed app opened signed in without credentials and served preview3. The new
+Imports page loaded its empty source list without error; screenshot retained
+outside the repo as secondary-tube3-imports.jpg. This verifies installation,
+startup, version and basic Imports UI/API, not actual YouTube download, cancel,
+scheduled sync, Linux runtime or full security acceptance. No owner videos were
+imported as fixtures. Automated tests remain unrun. No Actions used.
+
+Public sources/release/channel are pushed. Large artifacts and evidence remain
+on I; no new C fixture/install/archive. No task fixture processes remain. Remote
+on-screen input restored off and clipboard setting unchanged. Normal installed
+updater is intentionally idle/current. No remaining required release/install work.
+
+Operational note: existing cleanup reuses the retained-copy progress label while
+verifying an older copy before retirement; file totals may reset during stage9.
+This was normal progress, not a repeated apply or failed installation. Public
+tunnel loss/Cloudflare1033 during snapshot recovered after restart; exactly one
+Tube apply was used. Source tag3 remains ated1e46c; later handoffs are docs only.
