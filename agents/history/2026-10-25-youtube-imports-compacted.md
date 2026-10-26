@@ -226,3 +226,19 @@ in browser variable tube5BeforeCells. Finish combined operation; report completi
 to Ai task under verified human coordination approval. Private sign-in may be
 needed after the final restart before retrying the existing requested Tube source.
 No complete installed import claim, owner-library fixture, Actions or new tests.
+
+## Secondary combined installation completed (2026-10-26)
+
+The normal protected transaction completed in 23m51s, all apps healthy. Cleanup
+retired one older automatic backup (~9463.9MB) and kept the latest verified
+recovery copy. Fresh browser Check for updates confirms Tube5 and MyAI8 installed
+and up to date. Manager90 and all24 other displayed installed groups match the
+pre-combined baseline. Completion was reported to Ai chat under the verified
+human coordination approval. No primary Tube operation was performed.
+
+After private user sign-in, one normal retry of the existing requested channel
+source was started. The installed channel page now shows refreshed name, handle,
+artwork, description and all queued titles. First video saved successfully;
+compatible streaming rendition is still processing. Batch/playback verification
+remains in progress; do not claim all selected videos succeeded yet. No new
+fixture source/account or test suite was created or run.
