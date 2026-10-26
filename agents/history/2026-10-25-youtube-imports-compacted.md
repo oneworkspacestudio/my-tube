@@ -242,3 +242,35 @@ artwork, description and all queued titles. First video saved successfully;
 compatible streaming rendition is still processing. Batch/playback verification
 remains in progress; do not claim all selected videos succeeded yet. No new
 fixture source/account or test suite was created or run.
+
+Installed playback evidence: the first saved video completed adaptive processing,
+exposed360p/480p choices, and played at selected480p with the native player visibly
+advancing from0:00 to0:16. Playback was paused afterwards. Second video also saved;
+both appear on the imported channel and matching playlist. Remaining3 are still
+in the existing source's background batch. The old Grok failure is outside the
+latest5 selected in this retry and is not a new-run failure. Private receipt and
+screenshots are outside Git on the task tooling drive.
+
+Original installed retry completed at00:53:34 on2026-10-26: normal UI reports
+Finished5saved,0already,0needattention. All latest5 selected items saved. The
+historical sixth Grok failure remained outside that newest5 window. Temporarily
+expanded this existing source from5 to6 (end/manual unchanged) and started one
+normal check to repair that original failed item too; it skipped the5 saved items
+and is downloading only Grok. Must restore recent-video count5 after completion.
+
+## Final installed import verification (2026-10-26)
+
+The latest5 batch completed:5saved,0failed. The one historical sixth failure
+also saved on the follow-up check:1saved,5already-in-library,0needattention.
+Source now has6saved and0failures; all6 render on its private imported channel.
+Restored the original recent-video count5; playlist window end and manual schedule
+unchanged. Channel name/handle/about/avatar/banner and saved video/playlist links
+verified in the normal installed browser. First video480p playback visibly advanced
+0:00->0:16 after normal H264/AAC adaptive processing. No duplicate source/account
+or saved-video copies were created. No source import remains pending.
+
+Final private receipts/screenshots are on the task tooling drive, outside Git.
+The updater and RDP intermediate tabs were closed; the completed Tube channel is
+left open as the deliverable. Preview5 public assets/tags remain immutable. These
+are live owner-requested repair checks, not a clean-host/Linux-runtime/reboot test
+or production acceptance claim. No automated tests or GitHub Actions ran.
