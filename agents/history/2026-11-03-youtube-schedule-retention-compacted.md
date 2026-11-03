@@ -74,3 +74,43 @@ The final schema3 migration test also preserves an existing video's playlist
 reference without inferring importer ownership. Publication, public channel and
 installed7 verification remain pending. The separate PC2 model benchmark now
 visibly reports Finished; no benchmark was interrupted by this task.
+
+## Immutable publication and channel
+
+Source cd3c8cc5c45e21b04a2a8fca7ff386cd282ae64f pushed to main/tag7. All13 public
+assets verified against local sizes/GitHub SHA256. Anonymous Windows ZIP hash
+288195b4fec58d72eca62bebf9358087a59dc5652d53f6371c56d31ee48a9de6;
+EXE59e1d82a7a3508915dcfb508582e12e221b693318f2f781fae8a978144a6d2ec.
+Actual candidate planner gates pass in both catalog layouts, plus component
+projection retaining all36 unrelated app contracts/447 package contracts.
+Workspace public pin/channel e3919c9 pushed; every preceding row/asset and all
+withholding records identical. Exact raw-main CDN still caches the prior snapshot
+for five minutes; wait for normal anonymous discovery before applying. Full
+ordinary build running locally. No suite release/tag or Android claim.
+
+Synthetic NTFS fixture and its processes cleaned up. Both owner targets still6;
+fresh updater baselines collected, no7 apply yet. Finish normal backed-up My Tube-
+only updates and verify receipts, fresh up-to-date discovery, unrelated versions
+and served feature UI. Primary Voice5 was independently delivered during this
+task; use the fresh baseline, not the older6 task's version list.
+
+## Delivery complete
+
+Exact anonymous raw-main channel refreshed to7/13 assets. Ordinary full Workspace
+rebuild completed with37 apps/451 payloads; complete managed inventory audit and
+every archived payload size/SHA256 verified. This is local114 QA, no suite release.
+Normal Tube-only owner updates completed on primary in2m40s and secondary2m47s.
+All nine stages pass, startup healthy, latest verified recovery kept. Each retired
+one older automatic update recovery through normal cleanup; unrelated scheduled/
+manual backups retained. Fresh checks on both show7 up to date and every unrelated
+displayed installed version unchanged from the immediate pre-apply baseline.
+
+Primary all four installed payload sizes/hashes equal7; transaction phase complete.
+Both deployments serve new index-CTn-3iX-.js and display7. CSS/logo bytes bundled
+through the supported browser asset capability equal the tested release. Both new
+import dialogs show10/daily and all requested choices. Secondary existing source
+still0/Unlimited with24-hour schedule; no owner import or settings were submitted
+as a fixture. Completed receipts, version comparisons, payload evidence and final
+dialog screenshot remain outside Git in the task artifact root. Updater tabs
+closed; existing app views retained. No pending delivery target or required work.
+No live YouTube download, Linux runtime, physical-phone or reboot claim is added.
