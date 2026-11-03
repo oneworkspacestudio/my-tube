@@ -2,7 +2,10 @@
 
 Open **YouTube imports** in My Tube’s sidebar, or choose **Import from YouTube**
 on the upload page. Select **Add channel or playlist**, paste a channel URL,
-`@handle` or playlist URL, choose 1–50 videos (default 10) and start the import.
+`@handle` or playlist URL, choose **Videos to keep** and a background check
+schedule, then start the import. New imports keep **10 videos** and check daily.
+Retention choices are **10, 20, 30, 50 or Unlimited**. Scheduled checks can run
+every hour, every six hours, daily or weekly; Manual only disables automatic checks.
 
 - Channels check their newest regular uploads. Shorts and live tabs are not
   included in the channel import. Playlists default to the last selected number
@@ -29,10 +32,30 @@ on the upload page. Select **Add channel or playlist**, paste a channel URL,
   saved through another source owned by the same account. File hashes also
   prevent duplicate originals. A new source can link the existing video into
   its playlist without copying its media.
-- **Daily** checks are optional and off by default. They check the configured
-  recent window, not the complete backlog, once per day while the server is
-  running. A missed check runs when the server starts; existing files are kept.
-  Change the window/schedule from a source’s **Settings**.
+- Automatic checks run on the server, even after the browser closes. Keep One
+  Workspace/My Tube running; a missed check runs after the server starts again.
+  The next check is scheduled from completion, including failed/cancelled checks,
+  to avoid retry loops. Change the interval or pause checks with **Schedule & storage**.
+- A finite limit keeps that many successfully saved videos from the selected
+  window. When a verified replacement is saved, older managed downloads expire.
+  Their originals, streaming renditions, thumbnails and subtitles are removed to
+  reclaim space. Failed replacements do not evict a usable saved video. Reducing
+  the limit also removes excess entries; it is a deletion policy, not an archive.
+- Videos referenced by another import, saved to another playlist/Watch Later,
+  shared with another user, or published remain in the library. Ordinary uploads
+  and deduplicated existing library copies never acquire automatic deletion
+  ownership. Removing a source keeps its saved downloads and playlist.
+- Existing sources migrate with Unlimited retention and their previous schedule
+  and scan window unchanged. Existing saved library copies are preserved because
+  older versions did not record reliable deletion ownership. A finite limit can
+  detach those old copies from the source without deleting their library originals.
+- **Unlimited** keeps all saved downloads. Each check examines up to the latest
+  50 entries; this is not an unbounded historical backfill. Normal account/server
+  storage quotas still apply. A finite limit scans no more than that many entries.
+- Cleanup waits for active media processing and open Windows playback files. Its
+  durable queue retries after a restart or file unlock; pending cleanup is shown
+  on the source card. Temporary download staging and pending locked files can
+  briefly use additional disk space. Linked/reparse storage is never traversed.
 - **Cancel import** stops the active helper tree, releases the incomplete upload
   and keeps saved videos. **Check for new videos** retries unavailable/failed
   entries in the current window. Interrupted downloads restart from the beginning;
@@ -97,7 +120,7 @@ arguments; no shell is used. Each video is time/byte/quota bounded. Windows uses
 a kill-on-close job with process/memory limits; Unix uses a process group for
 tree cancellation. This is not an operating-system sandbox for hostile decoders.
 
-Source/item/channel state uses additive SQLite schema version 3 and is included in normal
+Source/item/channel state uses additive SQLite schema version 4 and is included in normal
 My Tube backups. Restore with this or a newer build; older executables
 cannot open the migrated database. No credentials are kept in source records.
 

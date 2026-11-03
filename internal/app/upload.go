@@ -290,6 +290,11 @@ func (a *App) finish(r *http.Request, u Upload) (string, error) {
 		_, e = tx.Exec("UPDATE uploads SET video_id=? WHERE id=?", id, u.ID)
 	}
 	if e == nil {
+		_, e = tx.Exec(`INSERT INTO youtube_media(video_id,source_id,owner)
+         SELECT ?,i.source_id,s.owner FROM youtube_items i JOIN youtube_sources s ON s.id=i.source_id
+         WHERE i.upload_id=? AND s.owner=? AND i.remote_id||'.mp4'=?`, id, u.ID, u.Owner, u.Name)
+	}
+	if e == nil {
 		e = tx.Commit()
 	}
 	if e != nil {

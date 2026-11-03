@@ -367,8 +367,8 @@ Page Tube
           Button intent=youtube-add variant=primary icon=Plus disabled=$app.importBusy "Add channel or playlist"
         Card region=settings-card
           Heading level=2 "Your library, available locally"
-          Text tone=body "Paste a YouTube channel, @handle or playlist. Choose up to 50 videos per check and optional daily updates. Downloads continue when you leave this page."
-          Text tone=small "Channels check newest uploads. For playlists, choose the end for latest additions or the start for newest-first lists. Channel pages include their name, artwork, description and discovered videos. Available MP4 videos download at up to 480p; lower quality is used when necessary. Private, live and sign-in-only videos are skipped with a clear result."
+          Text tone=body "Schedule background checks and keep the newest 10, 20, 30 or 50 downloads, or choose Unlimited. New imports keep 10 videos and check daily by default. Checks continue when you leave this page while One Workspace is running."
+          Text tone=small "Older managed downloads expire after replacements are verified. Uploads and videos kept in other playlists or imports stay available. Existing saved library copies are preserved. Unlimited checks the latest 50 videos and keeps all downloads. Available videos download at up to 480p."
         If condition=$app.importsLoading
           Text tone=muted "Loading your saved sources…"
         If condition=$app.hasImports
@@ -384,6 +384,7 @@ Page Tube
                   Badge $item.stateLabel
                 Link href=$item.url $item.url
                 Text tone=body $item.message
+                Text tone=small $item.retentionSummary
                 Text tone=small $item.counts
                 Text tone=small $item.timing
                 Row region=import-actions
@@ -394,7 +395,8 @@ Page Tube
                   If condition=$item.channel_id
                     Button intent=visit-channel payload=$item.channel_id variant=primary icon=CircleUserRound "Open channel"
                   Button intent=open-playlist payload=$item.playlist_id variant=outline icon=ListVideo "Open imported playlist"
-                  Button intent=youtube-settings payload=$item.id variant=outline icon=Settings2 "Settings"
+                  If condition=$item.canConfigure
+                    Button intent=youtube-settings payload=$item.id variant=outline icon=Settings2 "Schedule & storage"
                   If condition=$item.canRemove
                     Button intent=youtube-remove payload=$item.id variant=text disabled=$app.importBusy "Remove source"
                 Stack region=import-items

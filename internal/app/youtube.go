@@ -84,22 +84,25 @@ func youtubeURL(raw string) (string, string, error) {
 }
 
 type youtubeSource struct {
-	ID            string        `json:"id"`
-	Owner         string        `json:"-"`
-	URL           string        `json:"url"`
-	Kind          string        `json:"kind"`
-	Title         string        `json:"title"`
-	Playlist      string        `json:"playlist_id"`
-	ChannelID     string        `json:"channel_id,omitempty"`
-	Latest        int           `json:"latest"`
-	PlaylistOrder string        `json:"playlist_order"`
-	AutoHours     int           `json:"auto_hours"`
-	State         string        `json:"state"`
-	Message       string        `json:"message"`
-	Started       int64         `json:"started"`
-	Finished      int64         `json:"finished"`
-	Next          int64         `json:"next_check"`
-	Items         []youtubeItem `json:"items"`
+	ID             string        `json:"id"`
+	Owner          string        `json:"-"`
+	URL            string        `json:"url"`
+	Kind           string        `json:"kind"`
+	Title          string        `json:"title"`
+	Playlist       string        `json:"playlist_id"`
+	ChannelID      string        `json:"channel_id,omitempty"`
+	Latest         int           `json:"latest"`
+	Retention      int           `json:"retention_limit"`
+	Retained       int           `json:"retained_count"`
+	CleanupPending int           `json:"cleanup_pending"`
+	PlaylistOrder  string        `json:"playlist_order"`
+	AutoHours      int           `json:"auto_hours"`
+	State          string        `json:"state"`
+	Message        string        `json:"message"`
+	Started        int64         `json:"started"`
+	Finished       int64         `json:"finished"`
+	Next           int64         `json:"next_check"`
+	Items          []youtubeItem `json:"items"`
 }
 type youtubeItem struct {
 	Remote  string `json:"remote_id"`
@@ -111,10 +114,10 @@ type youtubeItem struct {
 	Total   int64  `json:"total"`
 }
 
-const youtubeSourceCols = "id,owner,url,kind,title,playlist_id,latest,playlist_order,auto_hours,state,message,started,finished,next_check"
+const youtubeSourceCols = "id,owner,url,kind,title,playlist_id,latest,playlist_order,auto_hours,state,message,started,finished,next_check,retention_limit"
 
 func scanYouTube(s scanner) (v youtubeSource, e error) {
-	e = s.Scan(&v.ID, &v.Owner, &v.URL, &v.Kind, &v.Title, &v.Playlist, &v.Latest, &v.PlaylistOrder, &v.AutoHours, &v.State, &v.Message, &v.Started, &v.Finished, &v.Next)
+	e = s.Scan(&v.ID, &v.Owner, &v.URL, &v.Kind, &v.Title, &v.Playlist, &v.Latest, &v.PlaylistOrder, &v.AutoHours, &v.State, &v.Message, &v.Started, &v.Finished, &v.Next, &v.Retention)
 	if v.Kind == "channel" {
 		v.ChannelID = v.ID
 	}
@@ -168,18 +171,23 @@ func (a *App) YouTubeList(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	for i := range out {
+		a.Store.DB.QueryRow("SELECT count(DISTINCT i.video_id) FROM youtube_items i JOIN videos v ON v.id=i.video_id WHERE i.source_id=? AND i.state='saved' AND v.deleted=0", out[i].ID).Scan(&out[i].Retained)
+		a.Store.DB.QueryRow("SELECT count(*) FROM youtube_purge WHERE source_id=? AND owner=?", out[i].ID, out[i].Owner).Scan(&out[i].CleanupPending)
+	}
 	respond(w, 200, out)
 }
 
 type youtubeInput struct {
 	URL           string `json:"url"`
 	Latest        int    `json:"latest"`
-	AutoHours     int    `json:"auto_hours"`
+	AutoHours     *int   `json:"auto_hours"`
+	Retention     *int   `json:"retention_limit"`
 	PlaylistOrder string `json:"playlist_order"`
 }
 
 func validYouTubeInput(in youtubeInput) bool {
-	return in.Latest >= 1 && in.Latest <= 50 && (in.AutoHours == 0 || in.AutoHours == 24) && (in.PlaylistOrder == "first" || in.PlaylistOrder == "last")
+	return in.Latest >= 1 && in.Latest <= 50 && in.AutoHours != nil && validYouTubeSchedule(*in.AutoHours) && in.Retention != nil && validYouTubeRetention(*in.Retention) && (in.PlaylistOrder == "first" || in.PlaylistOrder == "last")
 }
 func (a *App) YouTubeAdd(w http.ResponseWriter, r *http.Request) {
 	var in youtubeInput
@@ -189,13 +197,30 @@ func (a *App) YouTubeAdd(w http.ResponseWriter, r *http.Request) {
 	if in.PlaylistOrder == "" {
 		in.PlaylistOrder = "last"
 	}
+	if in.Retention == nil {
+		n := 10
+		in.Retention = &n
+	}
+	if in.AutoHours == nil {
+		n := 24
+		in.AutoHours = &n
+	}
+	if in.Latest == 0 {
+		in.Latest = *in.Retention
+		if in.Latest == 0 {
+			in.Latest = 50
+		}
+	}
 	u, kind, e := youtubeURL(in.URL)
 	if e != nil {
 		problem(w, 400, e.Error())
 		return
 	}
+	if in.Retention != nil && *in.Retention > 0 && in.Latest > *in.Retention {
+		in.Latest = *in.Retention
+	}
 	if !validYouTubeInput(in) {
-		problem(w, 400, "Choose 1–50 videos and manual or daily checks")
+		problem(w, 400, "Choose 1–50 videos per check, a supported schedule and a storage limit of 10, 20, 30, 50 or unlimited")
 		return
 	}
 	uid := who(r).User.ID
@@ -237,7 +262,7 @@ func (a *App) YouTubeAdd(w http.ResponseWriter, r *http.Request) {
 		_, e = tx.Exec("INSERT INTO playlist_search(rowid,title,description) SELECT rowid,title,description FROM playlists WHERE id=?", pl)
 	}
 	if e == nil {
-		_, e = tx.Exec("INSERT INTO youtube_sources(id,owner,url,kind,title,playlist_id,latest,playlist_order,auto_hours,created)VALUES(?,?,?,?,?,?,?,?,?,?)", id, uid, u, kind, title, pl, in.Latest, in.PlaylistOrder, in.AutoHours, now())
+		_, e = tx.Exec("INSERT INTO youtube_sources(id,owner,url,kind,title,playlist_id,latest,playlist_order,auto_hours,created,retention_limit)VALUES(?,?,?,?,?,?,?,?,?,?,?)", id, uid, u, kind, title, pl, in.Latest, in.PlaylistOrder, *in.AutoHours, now(), *in.Retention)
 	}
 	if e == nil && kind == "channel" {
 		_, e = tx.Exec("INSERT INTO youtube_channels(source_id,name,description) VALUES(?,?,?)", id, title, u)
@@ -277,19 +302,57 @@ func (a *App) YouTubeSettings(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	if youtubeBusy(v.State) {
+		problem(w, 409, "Wait for this import to finish or cancel it before changing settings")
+		return
+	}
 	var in youtubeInput
 	if !decode(w, r, &in) {
 		return
 	}
 	if in.PlaylistOrder == "" {
-		in.PlaylistOrder = "last"
+		in.PlaylistOrder = v.PlaylistOrder
+	}
+	if in.Retention == nil {
+		in.Retention = &v.Retention
+	}
+	if in.AutoHours == nil {
+		in.AutoHours = &v.AutoHours
+	}
+	if in.Latest == 0 {
+		in.Latest = *in.Retention
+		if in.Latest == 0 {
+			in.Latest = 50
+		}
+	}
+	if in.Retention != nil && *in.Retention > 0 && in.Latest > *in.Retention {
+		in.Latest = *in.Retention
 	}
 	if !validYouTubeInput(in) {
-		problem(w, 400, "Choose 1–50 videos and manual or daily checks")
+		problem(w, 400, "Choose a supported check schedule and storage limit")
 		return
 	}
-	_, e := a.Store.DB.Exec("UPDATE youtube_sources SET latest=?,playlist_order=?,auto_hours=?,next_check=? WHERE id=?", in.Latest, in.PlaylistOrder, in.AutoHours, now()+86400000, v.ID)
-	a.failure(w, e)
+	tx, e := a.Store.DB.Begin()
+	if e != nil {
+		a.failure(w, e)
+		return
+	}
+	defer tx.Rollback()
+	_, e = tx.Exec("UPDATE youtube_sources SET latest=?,playlist_order=?,auto_hours=?,retention_limit=?,next_check=? WHERE id=?", in.Latest, in.PlaylistOrder, *in.AutoHours, *in.Retention, nextYouTubeCheck(now(), *in.AutoHours), v.ID)
+	v.Retention = *in.Retention
+	v.PlaylistOrder = in.PlaylistOrder
+	if e == nil {
+		e = trimYouTube(tx, v)
+	}
+	if e == nil {
+		e = tx.Commit()
+	}
+	if e != nil {
+		a.failure(w, e)
+		return
+	}
+	// Purge runs on the worker, so playback/file locks cannot stall this request.
+	respond(w, 200, map[string]bool{"ok": true})
 }
 func (a *App) YouTubeCancel(w http.ResponseWriter, r *http.Request) {
 	v, ok := a.ownedYouTube(w, r)
@@ -308,7 +371,7 @@ func (a *App) YouTubeCancel(w http.ResponseWriter, r *http.Request) {
 		a.youtubeCancel()
 	}
 	a.youtubeMu.Unlock()
-	_, e := a.Store.DB.Exec("UPDATE youtube_sources SET state=?,message='Cancelled; saved videos are kept',finished=?,next_check=? WHERE id=?", state, now(), now()+86400000, v.ID)
+	_, e := a.Store.DB.Exec("UPDATE youtube_sources SET state=?,message='Cancelled; saved videos are kept',finished=?,next_check=? WHERE id=?", state, now(), nextYouTubeCheck(now(), v.AutoHours), v.ID)
 	a.failure(w, e)
 }
 func (a *App) YouTubeRemove(w http.ResponseWriter, r *http.Request) {
@@ -324,11 +387,13 @@ func (a *App) YouTubeRemove(w http.ResponseWriter, r *http.Request) {
 	a.failure(w, e)
 }
 
-func (a *App) youtubeWorker(ctx context.Context) {
+func (a *App) youtubeWorker(ctx context.Context) { a.youtubeWorkerLoop(ctx, a.importYouTube) }
+func (a *App) youtubeWorkerLoop(ctx context.Context, run func(context.Context, youtubeSource) error) {
 	a.recoverYouTubeImports()
 	// A stopped process cannot retain a helper process; restart bounded work.
 	a.Store.DB.Exec("UPDATE youtube_sources SET state=CASE WHEN state='cancelling' THEN 'cancelled' ELSE 'queued' END,message='Restarted after interruption' WHERE state IN('preparing','scanning','downloading','cancelling')")
 	ticker := time.NewTicker(2 * time.Second)
+	cleanupAt := int64(0)
 	defer ticker.Stop()
 	for {
 		select {
@@ -337,6 +402,10 @@ func (a *App) youtubeWorker(ctx context.Context) {
 		default:
 		}
 		a.writeMu.Lock()
+		if now() >= cleanupAt {
+			_ = a.purgeYouTubeLocked()
+			cleanupAt = now() + 2000
+		}
 		v, e := scanYouTube(a.Store.DB.QueryRow("SELECT "+youtubeSourceCols+" FROM youtube_sources WHERE (state='queued' OR (auto_hours>0 AND next_check<=? AND state NOT IN('preparing','scanning','downloading','cancelling'))) AND owner IN(SELECT id FROM users WHERE disabled=0) ORDER BY CASE WHEN state='queued' THEN 0 ELSE 1 END,created LIMIT 1", now()))
 		var jobCtx context.Context
 		var cancel context.CancelFunc
@@ -346,11 +415,11 @@ func (a *App) youtubeWorker(ctx context.Context) {
 			a.youtubeActive = v.ID
 			a.youtubeCancel = cancel
 			a.youtubeMu.Unlock()
-			_, e = a.Store.DB.Exec("UPDATE youtube_sources SET state='preparing',message='Preparing verified YouTube tools',started=?,finished=0,next_check=? WHERE id=?", now(), now()+86400000, v.ID)
+			_, e = a.Store.DB.Exec("UPDATE youtube_sources SET state='preparing',message='Preparing verified YouTube tools',started=?,finished=0,next_check=? WHERE id=?", now(), nextYouTubeCheck(now(), v.AutoHours), v.ID)
 		}
 		a.writeMu.Unlock()
 		if e == nil {
-			err := a.importYouTube(jobCtx, v)
+			err := run(jobCtx, v)
 			a.writeMu.Lock()
 			var state string
 			a.Store.DB.QueryRow("SELECT state FROM youtube_sources WHERE id=?", v.ID).Scan(&state)
@@ -432,7 +501,7 @@ func (a *App) youtubeStatus(id, state, message string, finished bool) {
 	if finished {
 		end = now()
 	}
-	a.Store.DB.Exec("UPDATE youtube_sources SET state=?,message=?,finished=? WHERE id=?", state, message, end, id)
+	a.Store.DB.Exec("UPDATE youtube_sources SET state=?,message=?,finished=?,next_check=CASE WHEN ?=1 AND auto_hours>0 THEN ?+auto_hours*3600000 WHEN auto_hours=0 THEN 0 ELSE next_check END WHERE id=?", state, message, end, finished, end, id)
 }
 
 type youtubeEntry struct {
@@ -524,6 +593,7 @@ func (a *App) importYouTube(ctx context.Context, source youtubeSource) error {
 			return e
 		}
 	}
+	observedAt := now()
 	for i, entry := range listing.Entries {
 		if i >= source.Latest {
 			break
@@ -537,6 +607,16 @@ func (a *App) importYouTube(ctx context.Context, source youtubeSource) error {
    message=CASE WHEN youtube_items.state='saved' THEN youtube_items.message ELSE 'Waiting to download at up to 480p' END,
    updated=excluded.updated`, source.ID, entry.ID, youtubeText(entry.Title, 195), now()); e != nil {
 			return e
+		}
+	}
+	for i, entry := range listing.Entries {
+		if i >= source.Latest {
+			break
+		}
+		if youtubeID.MatchString(entry.ID) {
+			if _, e = a.Store.DB.Exec("UPDATE youtube_items SET seen_at=?,source_position=? WHERE source_id=? AND remote_id=?", observedAt, i, source.ID, entry.ID); e != nil {
+				return e
+			}
 		}
 	}
 	if source.Kind == "channel" {
@@ -604,7 +684,7 @@ func (a *App) importYouTube(ctx context.Context, source youtubeSource) error {
 	if failures > 0 {
 		state = "partial"
 	}
-	a.youtubeStatus(source.ID, state, fmt.Sprintf("Finished · %d saved · %d already in your library · %d need attention", saved, skipped, failures), true)
+	a.youtubeStatus(source.ID, state, fmt.Sprintf("Finished · %d saved · %d already in your library · %d need attention", saved, skipped, failures)+a.youtubeCleanupSummary(source.ID), true)
 	return nil
 }
 func youtubeText(s string, n int) string {
@@ -730,7 +810,14 @@ func (a *App) linkYouTube(s youtubeSource, remote, video, message string) error 
 	if e != nil {
 		return e
 	}
-	return tx.Commit()
+	if e = trimYouTube(tx, s); e != nil {
+		return e
+	}
+	if e = tx.Commit(); e != nil {
+		return e
+	}
+	_ = a.purgeYouTubeLocked()
+	return nil
 }
 
 func (a *App) downloadYouTube(parent context.Context, tool, deno string, s youtubeSource, entry youtubeEntry) error {

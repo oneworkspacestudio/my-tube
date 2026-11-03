@@ -85,6 +85,21 @@ const visibilityOptions = [
   { value: "unlisted", label: "Unlisted — direct link only" },
   { value: "public", label: "Public — discoverable" },
 ];
+const youtubeRetentionOptions = [
+  {value:"10",label:"10 videos (default)"},
+  {value:"20",label:"20 videos"},
+  {value:"30",label:"30 videos"},
+  {value:"50",label:"50 videos"},
+  {value:"0",label:"Unlimited"},
+];
+const youtubeScheduleOptions = [
+  {value:"0",label:"Manual only"},
+  {value:"1",label:"Every hour"},
+  {value:"6",label:"Every 6 hours"},
+  {value:"24",label:"Every day"},
+  {value:"168",label:"Every week"},
+];
+const youtubeScheduleLabel = (hours:number) => youtubeScheduleOptions.find(option=>Number(option.value)===hours)?.label || "Manual only";
 export function useTube() {
   const client = useQueryClient();
   const [route, setRoute] = useState(location.hash.slice(1) || "home");
@@ -421,12 +436,7 @@ export function useTube() {
             "Import a YouTube channel or playlist",
             [
               f("youtubeURL", "Channel URL, @handle or playlist URL"),
-              f(
-                "youtubeLatest",
-                "Number of recent videos (1–50)",
-                10,
-                "number",
-              ),
+              f("youtubeRetention", "Videos to keep", "10", "select", youtubeRetentionOptions),
               f(
                 "youtubeOrder",
                 "Playlist window (channels always use newest uploads)",
@@ -443,13 +453,10 @@ export function useTube() {
                   },
                 ],
               ),
-              f("youtubeAuto", "Check for new videos", "manual", "select", [
-                "manual",
-                "daily",
-              ]),
+              f("youtubeAuto", "Check for new videos in the background", "24", "select", youtubeScheduleOptions),
             ],
             [btn("youtube-save", "Add and download", "primary")],
-            "A channel page is created immediately. Videos download at up to 480p and remain private, along with the matching playlist. Daily checks run while My Tube is running.",
+            "Keep the newest downloads automatically. Older downloads are removed when replacements are saved; videos kept in other playlists or imports stay available. Checks continue when you close this page while One Workspace is running. Unlimited checks the latest 50 videos and keeps every saved download. Your storage quota still applies.",
           );
           return;
         case "youtube-save":
@@ -458,9 +465,10 @@ export function useTube() {
           try {
             await write("youtube", "POST", {
               url: form.youtubeURL,
-              latest: Number(form.youtubeLatest),
+              retention_limit: Number(form.youtubeRetention),
+              latest: Number(form.youtubeRetention) || 50,
               playlist_order: form.youtubeOrder,
-              auto_hours: form.youtubeAuto === "daily" ? 24 : 0,
+              auto_hours: Number(form.youtubeAuto),
             });
             setDialog(null);
             go("imports");
@@ -500,14 +508,9 @@ export function useTube() {
           if (!source) return;
           show(
             "youtube-settings",
-            "Import settings",
+            "Schedule & storage",
             [
-              f(
-                "youtubeLatest",
-                "Number of recent videos (1–50)",
-                source.latest,
-                "number",
-              ),
+              f("youtubeRetention", "Videos to keep", String(source.retention_limit ?? 0), "select", youtubeRetentionOptions),
               f(
                 "youtubeOrder",
                 "Playlist window (channels always use newest uploads)",
@@ -524,16 +527,10 @@ export function useTube() {
                   },
                 ],
               ),
-              f(
-                "youtubeAuto",
-                "Check for new videos",
-                source.auto_hours ? "daily" : "manual",
-                "select",
-                ["manual", "daily"],
-              ),
+              f("youtubeAuto", "Check for new videos in the background", String(source.auto_hours || 0), "select", youtubeScheduleOptions),
             ],
             [btn("youtube-settings-save", "Save settings", "primary", payload)],
-            "Changing this does not remove existing videos. Choose Check for new videos to run immediately.",
+            "A smaller limit removes older downloads from this import and frees their storage. Existing library copies, uploads and videos kept in another playlist or import are preserved. Checks run while One Workspace is running; a missed check runs when it starts again. Unlimited checks the latest 50 videos and keeps all saved downloads. Your storage quota still applies.",
           );
           return;
         }
@@ -542,9 +539,10 @@ export function useTube() {
           setImportBusy(true);
           try {
             await write(`youtube/${payload}`, "PUT", {
-              latest: Number(form.youtubeLatest),
+              retention_limit: Number(form.youtubeRetention),
+              latest: Number(form.youtubeRetention) || 50,
               playlist_order: form.youtubeOrder,
-              auto_hours: form.youtubeAuto === "daily" ? 24 : 0,
+              auto_hours: Number(form.youtubeAuto),
             });
             setDialog(null);
             await refresh();
@@ -1622,6 +1620,7 @@ export function useTube() {
           canCancel: busy && s.state !== "cancelling",
           canCheck: !busy,
           canRemove: !busy,
+          canConfigure: !busy,
           stateLabel:
             (
               {
@@ -1636,7 +1635,8 @@ export function useTube() {
                 cancelled: "Cancelled",
               } as any
             )[s.state] || s.state,
-          summary: `${s.kind === "channel" ? "Channel · newest uploads" : `Playlist · ${s.playlist_order === "last" ? "end" : "start"} of playlist`} · 480p · up to ${s.latest} videos per check · ${s.auto_hours ? "daily checks" : "manual checks"}`,
+          summary: `${s.kind === "channel" ? "Channel · newest uploads" : `Playlist · ${s.playlist_order === "last" ? "end" : "start"} of playlist`} · 480p · ${youtubeScheduleLabel(s.auto_hours || 0)}`,
+          retentionSummary: `${s.retained_count || 0} saved · ${s.retention_limit ? `Keep newest ${s.retention_limit}` : "Keep all videos"}${s.cleanup_pending ? ` · ${s.cleanup_pending} older download(s) waiting for cleanup` : ""}`,
           counts: `Recent results: ${saved} saved · ${failed} need attention`,
           timing:
             busy && s.started

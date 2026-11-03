@@ -993,17 +993,17 @@ export function Tube({
               <Card region="settings-card">
                 <Heading level={2}>Your library, available locally</Heading>
                 <Text tone="body">
-                  Paste a YouTube channel, @handle or playlist. Choose up to 50
-                  videos per check and optional daily updates. Downloads
-                  continue when you leave this page.
+                  Schedule background checks and keep the newest 10, 20, 30 or
+                  50 downloads, or choose Unlimited. New imports keep 10 videos
+                  and check daily by default. Checks continue when you leave
+                  this page while One Workspace is running.
                 </Text>
                 <Text tone="small">
-                  Channels check newest uploads. For playlists, choose the end
-                  for latest additions or the start for newest-first lists.
-                  Channel pages include their name, artwork, description and
-                  discovered videos. Available MP4 videos download at up to
-                  480p; lower quality is used when necessary. Private, live and
-                  sign-in-only videos are skipped with a clear result.
+                  Older managed downloads expire after replacements are
+                  verified. Uploads and videos kept in other playlists or
+                  imports stay available. Existing saved library copies are
+                  preserved. Unlimited checks the latest 50 videos and keeps all
+                  downloads. Available videos download at up to 480p.
                 </Text>
               </Card>
               {data.app.importsLoading && (
@@ -1024,6 +1024,7 @@ export function Tube({
                       </Row>
                       <Link href={item.url}>{item.url}</Link>
                       <Text tone="body">{item.message}</Text>
+                      <Text tone="small">{item.retentionSummary}</Text>
                       <Text tone="small">{item.counts}</Text>
                       <Text tone="small">{item.timing}</Text>
                       <Row region="import-actions">
@@ -1067,14 +1068,16 @@ export function Tube({
                         >
                           Open imported playlist
                         </Button>
-                        <Button
-                          intent="youtube-settings"
-                          payload={item.id}
-                          variant="outline"
-                          icon="Settings2"
-                        >
-                          Settings
-                        </Button>
+                        {item.canConfigure && (
+                          <Button
+                            intent="youtube-settings"
+                            payload={item.id}
+                            variant="outline"
+                            icon="Settings2"
+                          >
+                            Schedule & storage
+                          </Button>
+                        )}
                         {item.canRemove && (
                           <Button
                             intent="youtube-remove"

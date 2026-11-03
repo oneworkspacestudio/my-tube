@@ -57,8 +57,9 @@ for FFmpeg/FFprobe configuration on Linux.
 - User-scoped Quantum import/export, standalone media storage, administrative
   quotas/configuration/jobs/reports/audit, storage reconciliation and CLI backups.
 - YouTube channel and playlist imports: browse private imported channel pages,
-  download recent videos at up to 480p into private playlists, skip duplicates
-  and optionally check daily. See
+  download recent videos at up to 480p into private playlists, skip duplicates,
+  schedule background checks and keep the newest 10, 20, 30 or 50 downloads, or
+  choose Unlimited. See
   [YouTube imports](docs/YOUTUBE-IMPORTS.md) for setup, storage and availability.
 - OIDC discovery, code + PKCE, signed token validation, server sessions,
   CSRF/Origin protection, and checks on metadata and every media derivative.

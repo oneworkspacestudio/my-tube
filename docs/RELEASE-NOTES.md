@@ -1,3 +1,23 @@
+# v0.1.0-preview.7
+
+Imported channels and playlists now support hourly, six-hourly, daily and weekly
+background checks. New imports check daily and keep the newest 10 downloads;
+choose 20, 30, 50 or Unlimited in Schedule & storage. Closing the browser does not
+stop the server worker, and missed checks resume when One Workspace starts.
+
+Older importer-owned downloads expire after verified replacements arrive, freeing
+original and derived media storage. Failed replacements keep usable saved videos.
+Shared/other-playlist references and ordinary uploads are preserved. Existing
+sources retain their prior schedules and default to Unlimited; legacy library
+copies are preserved. Unlimited checks up to 50 recent entries per check while
+keeping all saved downloads, subject to normal storage quotas. Cleanup waits for
+active processing/open files and resumes from a durable queue after restart.
+
+Additive SQLite schema4 requires this or a newer app. Use the normal backed-up
+Workspace updater; restore the pre-update data backup when rolling back to older
+schema versions. This remains an unsigned preview. See YOUTUBE-IMPORTS.md for
+retention semantics and the compact history/build-info for actual validation.
+
 # v0.1.0-preview.6
 
 My Tube now uses One Workspace's blue colour family in light and dark themes,
