@@ -4,9 +4,9 @@
 
 The user requested One Workspace design-system colours/branding and My Tube's
 existing repository logo. Started from clean `main` at `86694e2`, equal to
-`origin/main`. This task authorizes implementation; no commit, push, release,
-catalogue promotion or installed-machine update was requested for this app.
-The changes remain local and uncommitted. Existing preview5 assets are unchanged.
+`origin/main`. The initial source change was followed by explicit authorization to push, release
+and install. Current state: preview6 is public and both PCs are installed and
+verified. Existing preview5 assets remain unchanged; delivery details follow.
 
 ## Implementation
 
@@ -46,7 +46,7 @@ The changes remain local and uncommitted. Existing preview5 assets are unchanged
 - Retained seven `docs/screenshots/workspace-branding-*.png` previews. The
   disposable native/browser processes were closed and test data removed.
 
-## Resume
+## Initial review handoff (superseded by delivery below)
 
 Review the local diff and previews. If publication is subsequently requested,
 follow the current app lifecycle, allocate a new immutable app version and use
@@ -79,3 +79,40 @@ consume the published app6 instead of retaining the seed's older Tube payload.
 Final stripped preview6 embedded-binary checks passed at root and /my-tube/,
 including exact logo/favicon bytes, desktop/phone light/dark rendering, 320px
 overflow checks, navigation and keyboard focus. Previews now show version6.
+
+## Delivery complete
+
+Published immutable [v0.1.0-preview.6](https://github.com/oneworkspacestudio/my-tube/releases/tag/v0.1.0-preview.6)
+from e7d562b948a390c7d00641d21b2187457bb59a0d. All13 public assets match local
+size/SHA256; anonymous Windows archive download matches
+2b75f650cf96b2c4e4b223f77a122333027e04d7951d873c3085d0ad31c830dd.
+Final stripped EXE SHA256561cc2dd1248b9279bce11f246a9a078a30b59de2720de6bb7faa881e613dc24.
+Suite public channel/component pin52785eb includes6; anonymous exact raw-main
+channel check passes with every preceding release/asset/withholding retained.
+
+The suite ordinary rebuild now consumes Tube6:37 apps/451 archived payloads,
+all size/hash checked, catalog audit passed. Candidate planner/catalog/distribution
+and two component boundary tests pass. Local suite114 is QA only; no Workspace
+release or Android publication occurred. The independent app updater is the
+installed delivery path. GitHub Actions stayed disabled in both repositories.
+
+PC2 normal Tube-only update5->6 completed in2m41s; primary2->6 completed in5m52s.
+Both retain Workspace113 and their latest verified recovery copies. Fresh update
+checks show Tube6 up to date and every unrelated displayed installed version
+unchanged from its pre-apply baseline. The primary's four owned payloads match
+all release hashes; both deployments serve exact tested SVG/CSS bytes and show
+the repo logo, blue palette and footer6. Existing PC2 Imports tab refreshed.
+No extra PC2 restart was performed after completion.
+
+The initial primary attempt failed before preparation while a separate Finance4
+CLI update held update.lock during recovery cleanup. Read-only Windows Restart
+Manager inspection identified that owner. Waited for its normal exit, refreshed
+and reselected only Tube, then completed one successful normal apply; no lock or
+process was forced. Primary Finance4/MyAI20 and PC2 Finance2/MyAI23 were retained.
+Pre-existing unrelated update/review choices were not applied.
+
+Private receipts, served-asset checks and screenshots are in the task tooling
+artifact directory outside Git. Synthetic NTFS data and the initial failed-test
+residue were removed; no task preview services remain. No required release or
+installation work remains. Physical-phone, Linux-runtime and reboot acceptance
+remain unclaimed; this is an unsigned preview, not a stable-release claim.
