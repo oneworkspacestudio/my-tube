@@ -2,10 +2,11 @@ Page Tube
   Row region=topbar
     Row region=brand
       Button intent=menu variant=icon title="Toggle navigation" icon=Menu
-      Button intent=home variant=brand
-        Icon name=Clapperboard
-        Text "My Tube"
-        Badge "WORKSPACE"
+      Button intent=home variant=brand title="My Tube home"
+        Image src=$app.logoURL variant=brand-logo alt=""
+        Stack region=brand-wordmark
+          Text "My Tube"
+          Badge "ONE WORKSPACE"
     Row region=searchbar
       Input field=search value=$app.search placeholder="Search videos, creators and ideas" title="Search videos"
       Button intent=search variant=search title="Search" icon=Search

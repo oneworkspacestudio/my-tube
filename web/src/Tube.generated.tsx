@@ -39,10 +39,12 @@ export function Tube({
             title="Toggle navigation"
             icon="Menu"
           />
-          <Button intent="home" variant="brand">
-            <Icon name="Clapperboard" />
-            <Text>My Tube</Text>
-            <Badge>WORKSPACE</Badge>
+          <Button intent="home" variant="brand" title="My Tube home">
+            <Image src={data.app.logoURL} variant="brand-logo" alt="" />
+            <Stack region="brand-wordmark">
+              <Text>My Tube</Text>
+              <Badge>ONE WORKSPACE</Badge>
+            </Stack>
           </Button>
         </Row>
         <Row region="searchbar">

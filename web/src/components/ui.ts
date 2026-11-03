@@ -277,7 +277,7 @@ export function Image(p: P) {
     className: cls(p),
     src: p.src,
     alt: p.alt || "",
-    loading: "lazy",
+    loading: p.variant === "brand-logo" ? "eager" : "lazy",
     onError: () => setFailed(true),
   });
 }

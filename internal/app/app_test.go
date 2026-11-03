@@ -278,8 +278,11 @@ func TestBackupRestoreAndMigrationGuards(t *testing.T) {
 	if e = RestoreAll(c, archive); e == nil {
 		t.Fatal("Restore must refuse overwrite")
 	}
-	db.DB.Exec("UPDATE migrations SET version=99")
-	if _, e = OpenStore(c.DataDir); e == nil {
+	if _, e = db.DB.Exec("INSERT INTO migrations(version,applied) VALUES(99,0)"); e != nil {
+		t.Fatal(e)
+	}
+	if newer, openErr := OpenStore(c.DataDir); openErr == nil {
+		newer.Close()
 		t.Fatal("Downgrade allowed")
 	}
 }

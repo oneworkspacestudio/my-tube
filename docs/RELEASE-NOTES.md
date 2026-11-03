@@ -1,3 +1,18 @@
+# v0.1.0-preview.6
+
+My Tube now uses One Workspace's blue colour family in light and dark themes,
+with its original repository logo in the header and browser tab. Navigation,
+buttons, default avatars and placeholder artwork share the new palette. The
+One Workspace label stays visible on phones, and narrow screens no longer gain
+a horizontal scrollbar from the category strip.
+
+Existing accounts, media, imported sources, settings and permissions stay in
+place. There is no database or managed application contract change. Use the
+normal backed-up Workspace app updater. Windows x64 and Linux x64 builds are
+provided; this remains an unsigned preview. Build and focused visual acceptance
+are recorded in build-info.json and the compact repository history. Linux runtime,
+clean-host/service/reboot and broad playback/import acceptance are not claimed.
+
 # v0.1.0-preview.1
 
 First usable Windows preview of My Tube for One Workspace.

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import logoURL from "../../docs/branding/my-tube.svg";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 export const base =
   document.querySelector<HTMLMetaElement>('meta[name="mytube-base"]')
@@ -1392,6 +1393,7 @@ export function useTube() {
     action,
     field,
     app: {
+      logoURL,
       version: me.version || "My Tube",
       csrf,
       signedIn,
